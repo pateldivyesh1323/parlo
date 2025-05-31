@@ -1,0 +1,12 @@
+{
+    "name": "voice-comm-app",
+    "private": true,
+    "version": "1.0.0",
+    "scripts": {
+        "dev": "concurrently \"pnpm --filter server dev\" \"pnpm --filter client dev\""
+    },
+    "devDependencies": {
+        "concurrently": "^9.1.2",
+        "typescript": "^5.8.3"
+    }
+}
