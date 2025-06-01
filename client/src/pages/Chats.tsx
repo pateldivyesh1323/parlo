@@ -1,15 +1,6 @@
-import { useAuth } from "../context/AuthContext";
-import { Navigate } from "react-router";
-
 export default function Chats() {
-  const { user } = useAuth();
-
-  if (!user) {
-    return <Navigate to="/" replace />;
-  }
-
   return (
-    <div className="min-h-screen bg-background">
+    <div className="bg-background">
       <div className="container mx-auto py-8">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-3xl font-bold mb-6">Your Conversations</h1>

@@ -4,6 +4,7 @@ import SignIn from "./pages/SignIn";
 import Chats from "./pages/Chats";
 import BasicPageWrapper from "./components/PageWrappers/BasicPageWrapper";
 import { Toaster } from "./components/ui/sonner";
+import PrivateRouteWrapper from "./components/PageWrappers/PrivateRouteWrapper";
 
 const router = createBrowserRouter([
   {
@@ -21,9 +22,11 @@ const router = createBrowserRouter([
   {
     path: "/chats",
     element: (
-      <BasicPageWrapper>
-        <Chats />
-      </BasicPageWrapper>
+      <PrivateRouteWrapper>
+        <BasicPageWrapper>
+          <Chats />
+        </BasicPageWrapper>
+      </PrivateRouteWrapper>
     ),
   },
 ]);

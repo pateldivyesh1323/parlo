@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router";
+import { NavLink, useNavigate } from "react-router";
 import { Button } from "../ui/button";
 import { Avatar, AvatarFallback } from "../ui/avatar";
 import { useAuth } from "../../context/AuthContext";
@@ -10,7 +10,9 @@ import { toast } from "sonner";
 
 export default function Navbar() {
   const { user, loading } = useAuth();
+
   const navigate = useNavigate();
+
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
@@ -34,21 +36,23 @@ export default function Navbar() {
     setShowLogoutConfirm(true);
   };
 
-  const handleSignInClick = () => {
-    navigate("/signin");
-  };
-
   return (
     <>
-      <nav className="flex justify-between items-center p-4 bg-card border-b border-border">
-        <div
-          className="flex items-center space-x-3 cursor-pointer"
-          onClick={() => navigate("/")}
-        >
-          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-            <span className="text-primary-foreground font-bold text-lg">P</span>
-          </div>
-          <h1 className="text-2xl font-bold text-foreground">Parlo</h1>
+      <nav className="flex justify-between items-center p-4 bg-card border-b border-border sticky top-0 z-50">
+        <div className="flex items-center space-x-4 cursor-pointer gap-x-3">
+          <NavLink to="/" className="flex items-center space-x-2">
+            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+              <span className="text-primary-foreground font-bold text-lg">
+                P
+              </span>
+            </div>
+            <h1 className="text-2xl font-bold text-foreground">Parlo</h1>
+          </NavLink>
+          {user && (
+            <div>
+              <NavLink to="/chats">Chats</NavLink>
+            </div>
+          )}
         </div>
 
         <div className="flex items-center space-x-4">
@@ -86,12 +90,11 @@ export default function Navbar() {
               </Button>
             </div>
           ) : (
-            <Button
-              onClick={handleSignInClick}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground"
-            >
-              Sign In
-            </Button>
+            <NavLink to="/signin">
+              <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
+                Sign In
+              </Button>
+            </NavLink>
           )}
         </div>
       </nav>
