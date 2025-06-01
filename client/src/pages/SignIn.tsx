@@ -1,17 +1,11 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
-import {
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signInWithPopup,
-  GoogleAuthProvider,
-} from "firebase/auth";
-import { auth } from "../lib/firebase";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
+import { login, signInWithGoogle, signup } from "@/lib/authActions";
 
 export default function SignIn() {
   const navigate = useNavigate();
@@ -27,10 +21,10 @@ export default function SignIn() {
     setLoading(true);
     try {
       if (isLogin) {
-        await signInWithEmailAndPassword(auth, email, password);
+        await login(email, password);
         toast.success("Signed in successfully!");
       } else {
-        await createUserWithEmailAndPassword(auth, email, password);
+        await signup(email, password);
         toast.success("Account created! You're now signed in.");
       }
       navigate("/chats");
@@ -46,7 +40,7 @@ export default function SignIn() {
   const handleGoogleSignIn = async () => {
     setLoading(true);
     try {
-      await signInWithPopup(auth, new GoogleAuthProvider());
+      await signInWithGoogle();
       toast.success("Signed in with Google!");
       navigate("/chats");
     } catch (err) {
