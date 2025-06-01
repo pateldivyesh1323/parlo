@@ -1,8 +1,39 @@
+import { createBrowserRouter, RouterProvider } from "react-router";
+import Introduction from "./pages/Introduction";
+import SignIn from "./pages/SignIn";
+import Chats from "./pages/Chats";
+import BasicPageWrapper from "./components/PageWrappers/BasicPageWrapper";
+import { Toaster } from "./components/ui/sonner";
+
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: (
+      <BasicPageWrapper>
+        <Introduction />
+      </BasicPageWrapper>
+    ),
+  },
+  {
+    path: "/signin",
+    element: <SignIn />,
+  },
+  {
+    path: "/chats",
+    element: (
+      <BasicPageWrapper>
+        <Chats />
+      </BasicPageWrapper>
+    ),
+  },
+]);
+
 function App() {
   return (
-    <div>
-      <h1>Hello World</h1>
-    </div>
+    <>
+      <RouterProvider router={router} />
+      <Toaster />
+    </>
   );
 }
 
