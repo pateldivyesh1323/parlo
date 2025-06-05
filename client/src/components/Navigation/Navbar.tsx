@@ -1,36 +1,17 @@
 import { useState } from "react";
-import { NavLink, useNavigate } from "react-router";
 import { Button } from "../ui/button";
 import { Avatar, AvatarFallback } from "../ui/avatar";
 import { useAuth } from "../../context/AuthContext";
-import { logout } from "../../lib/authActions";
 import LogoutConfirmDialog from "../Auth/LogoutConfirmDialog";
 import LoadingSpinner from "../Common/LoadingSpinner";
-import { toast } from "sonner";
+import { Logo } from "../Common";
+import { NavLink } from "react-router";
 
 export default function Navbar() {
   const { user, loading } = useAuth();
 
-  const navigate = useNavigate();
-
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-
-  const handleLogout = async () => {
-    setIsLoggingOut(true);
-    try {
-      await logout();
-      toast.success("Successfully logged out");
-      setShowLogoutConfirm(false);
-      navigate("/");
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Logout failed";
-      console.error("Logout failed:", errorMessage);
-      toast.error("Failed to logout. Please try again.");
-    } finally {
-      setIsLoggingOut(false);
-    }
-  };
 
   const handleLogoutClick = () => {
     setShowLogoutConfirm(true);
@@ -41,12 +22,7 @@ export default function Navbar() {
       <nav className="flex justify-between items-center p-4 bg-card border-b border-border sticky top-0 z-50">
         <div className="flex items-center space-x-4 cursor-pointer gap-x-3">
           <NavLink to="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-lg">
-                P
-              </span>
-            </div>
-            <h1 className="text-2xl font-bold text-foreground">Parlo</h1>
+            <Logo size="md" />
           </NavLink>
           {user && (
             <div>
@@ -101,9 +77,9 @@ export default function Navbar() {
 
       <LogoutConfirmDialog
         open={showLogoutConfirm}
-        onOpenChange={setShowLogoutConfirm}
-        onConfirm={handleLogout}
+        setOpen={setShowLogoutConfirm}
         isLoading={isLoggingOut}
+        setIsLoading={setIsLoggingOut}
       />
     </>
   );

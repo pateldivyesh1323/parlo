@@ -10,4 +10,7 @@ export default {
     appId: meta.VITE_FIREBASE_APP_ID,
     measurementId: meta.VITE_FIREBASE_MEASUREMENT_ID,
   },
+  server: {
+    origin: meta.VITE_SERVER_ORIGIN,
+  },
 };

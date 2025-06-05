@@ -107,6 +107,11 @@ export default function SignIn() {
                 className="w-full"
                 disabled={loading}
               >
+                <img
+                  src="/assets/logos/google.svg"
+                  alt="Google"
+                  className="w-6"
+                />
                 Continue with Google
               </Button>
             </div>

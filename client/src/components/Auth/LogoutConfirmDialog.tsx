@@ -7,23 +7,36 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "../ui/alert-dialog";
+} from "@/components/ui/alert-dialog";
+import { useAuth } from "@/context/AuthContext";
 
 interface LogoutConfirmDialogProps {
   open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onConfirm: () => void;
+  setOpen: (open: boolean) => void;
+  onLogout?: () => Promise<void>;
   isLoading?: boolean;
+  setIsLoading?: (isLoading: boolean) => void;
 }
 
 export default function LogoutConfirmDialog({
   open,
-  onOpenChange,
-  onConfirm,
+  setOpen,
+  onLogout,
   isLoading = false,
+  setIsLoading,
 }: LogoutConfirmDialogProps) {
+  const { logout } = useAuth();
+
+  const handleLogout = async () => {
+    setIsLoading?.(true);
+    await logout();
+    await onLogout?.();
+    setOpen(false);
+    setIsLoading?.(false);
+  };
+
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
+    <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Are you sure you want to logout?</AlertDialogTitle>
@@ -35,9 +48,9 @@ export default function LogoutConfirmDialog({
         <AlertDialogFooter>
           <AlertDialogCancel disabled={isLoading}>Cancel</AlertDialogCancel>
           <AlertDialogAction
-            onClick={onConfirm}
+            onClick={handleLogout}
             disabled={isLoading}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            className="bg-destructive hover:bg-destructive/90"
           >
             {isLoading ? "Signing out..." : "Logout"}
           </AlertDialogAction>
