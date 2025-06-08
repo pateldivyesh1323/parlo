@@ -1,20 +1,29 @@
 import User from "../model/user";
 import admin from "../lib/firebaseAdmin";
+import { NotFoundError } from "../middlewares/errorMiddleware";
 
 const register = async ({ firebaseId }: { firebaseId: string }) => {
   const user = await User.findOne({ firebaseId });
   if (user) {
-    return { message: "User already registered" };
+    return user;
   }
   const userData = await admin.auth().getUser(firebaseId);
-  console.log("User Data", userData);
   const newUser = new User({
-    name: userData.displayName,
+    name: userData.displayName || "",
     email: userData.email,
     firebaseId,
     photoURL: userData.photoURL,
   });
   await newUser.save();
+  return newUser;
 };
 
-export { register };
+const getUserByFirebaseId = async ({ firebaseId }: { firebaseId: string }) => {
+  const user = await User.findOne({ firebaseId });
+  if (user) {
+    return user;
+  }
+  throw new NotFoundError("User not found");
+};
+
+export { register, getUserByFirebaseId };

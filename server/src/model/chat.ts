@@ -9,6 +9,9 @@ const chatSchema = new Schema(
       type: Boolean,
       default: false,
     },
+    photoURL: {
+      type: String,
+    },
     users: [
       {
         type: Types.ObjectId,

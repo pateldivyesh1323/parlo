@@ -1,17 +1,26 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import SideNavbar from "./SideNavbar";
+import { useSearchParams } from "react-router";
+import { useEffect, useState } from "react";
 
 export default function SidebarWrapper({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [open, setOpen] = useState(searchParams.get("sidebar") === "true");
+
+  useEffect(() => {
+    setSearchParams({ sidebar: open ? "true" : "false" });
+  }, [open, setSearchParams]);
+
   return (
-    <SidebarProvider>
+    <SidebarProvider open={open} onOpenChange={setOpen}>
       <SideNavbar />
       <main className="flex-1">
         <div className="flex h-full ">
-          <SidebarTrigger className="h-full border-r" />
+          <SidebarTrigger className="h-full border-r rounded-none" />
           <section className="flex-1">{children}</section>
         </div>
       </main>

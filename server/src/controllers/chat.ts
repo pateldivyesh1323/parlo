@@ -13,7 +13,7 @@ const createChat = async ({
   name: string;
   isGroupChat: boolean;
 }) => {
-  const user = await User.findOne({ firebaseId: userId });
+  const user = await User.findOne({ firebaseId: userId }).select("_id email");
   if (!user) {
     throw new BadRequestError("User not found");
   }
@@ -59,6 +59,14 @@ const createChat = async ({
       );
     }
 
+    const existingChat = await Chat.findOne({
+      users: { $all: participants.map((participant) => participant._id) },
+    });
+
+    if (existingChat) {
+      throw new BadRequestError("Chat already exists");
+    }
+
     const [participant1, participant2] = participants;
 
     chat = await Chat.create({
@@ -69,4 +77,38 @@ const createChat = async ({
   return chat;
 };
 
-export { createChat };
+const getAllChats = async (userId: string) => {
+  const user = await User.findOne({ firebaseId: userId }).select("_id").lean();
+  if (!user) {
+    throw new BadRequestError("User not found");
+  }
+
+  const chats = await Chat.find({ users: { $in: [user._id] } })
+    .populate("latestMessage")
+    .populate("users");
+  return chats;
+};
+
+const getAllChatIds = async (userId: string) => {
+  const user = await User.findOne({ firebaseId: userId });
+  if (!user) {
+    throw new BadRequestError("User not found");
+  }
+
+  const chats = await Chat.find({ users: { $in: [user._id] } })
+    .select("_id")
+    .lean();
+  return chats.map((chat) => chat._id);
+};
+
+const hasUserAccess = async (firebaseId: string, chatId: string) => {
+  const user = await User.findOne({ firebaseId }).select("_id").lean();
+  if (!user) {
+    return false;
+  }
+
+  const chat = await Chat.findOne({ _id: chatId, users: { $in: [user._id] } });
+  return !!chat;
+};
+
+export { createChat, getAllChats, getAllChatIds, hasUserAccess };

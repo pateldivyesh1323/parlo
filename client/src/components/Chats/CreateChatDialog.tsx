@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Plus, X } from "lucide-react";
-import { useChat } from "@/context/ChatContext";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -12,6 +11,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { useCreateChat } from "@/hooks/useChat";
 
 interface CreateChatDialogProps {
   isOpen: boolean;
@@ -24,7 +24,7 @@ export function CreateChatDialog({
   onOpenChange,
   trigger,
 }: CreateChatDialogProps) {
-  const { createChat, isCreatingChat } = useChat();
+  const { mutate: createChat, isPending: isCreatingChat } = useCreateChat();
 
   const [newChatName, setNewChatName] = useState("");
   const [userEmails, setUserEmails] = useState<string[]>([""]);
@@ -55,10 +55,10 @@ export function CreateChatDialog({
       validEmails.length > 0 && (isGroupChat ? newChatName.trim() : true);
 
     if (isValidSubmission) {
-      await createChat(
-        validEmails,
-        isGroupChat ? newChatName.trim() : undefined,
-      );
+      createChat({
+        userEmails: validEmails,
+        name: isGroupChat ? newChatName.trim() : undefined,
+      });
       setNewChatName("");
       setUserEmails([""]);
       setIsGroupChat(false);

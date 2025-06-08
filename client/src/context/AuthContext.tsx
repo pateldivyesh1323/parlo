@@ -1,11 +1,12 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { onAuthStateChanged, type User } from "firebase/auth";
+import { onAuthStateChanged, type User as FirebaseUser } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { toast } from "sonner";
 import { logout as logoutFirebase } from "@/lib/authActions";
 import { setToken, clearToken, apiClient } from "@/lib/apiClient";
 
 interface AuthContextType {
+  firebaseUser: FirebaseUser | null;
   user: User | null;
   loading: boolean;
   logout: () => Promise<void>;
@@ -13,6 +14,7 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType>({
+  firebaseUser: null,
   user: null,
   loading: true,
   logout: async () => {},
@@ -20,52 +22,55 @@ const AuthContext = createContext<AuthContextType>({
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+  const [firebaseUser, setfirebaseUser] = useState<FirebaseUser | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setUser(user);
-      if (user) {
+    const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+      if (fbUser) {
+        setfirebaseUser(fbUser);
         try {
-          const token = await user.getIdToken();
-          if (token) {
-            setToken(token);
+          const token = await fbUser.getIdToken();
+          setToken(token);
+          const alreadyRegistered = localStorage.getItem(
+            `registered-${fbUser.uid}`,
+          );
+          if (!alreadyRegistered) {
+            const { data } = await apiClient.post<{ data: User }>(
+              `/api/auth/register`,
+            );
+            setUser(data.data);
+            localStorage.setItem(`registered-${fbUser.uid}`, "true");
+          } else {
+            const { data } = await apiClient.get<{ data: User }>(
+              `/api/auth/get-user`,
+            );
+            setUser(data.data);
           }
         } catch (error) {
-          console.error("Error getting initial token:", error);
+          console.error("Error getting user data:", error);
+          setUser(null);
+          setfirebaseUser(null);
+          clearToken();
+        } finally {
+          setLoading(false);
         }
       } else {
+        setfirebaseUser(null);
+        setUser(null);
         clearToken();
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     return unsubscribe;
   }, []);
 
-  const saveUser = async (user: User) => {
-    try {
-      const alreadyRegistered = localStorage.getItem(`registered-${user.uid}`);
-      if (!alreadyRegistered) {
-        await apiClient.post(`/api/auth/register`);
-        localStorage.setItem(`registered-${user.uid}`, "true");
-      }
-    } catch (error) {
-      console.error("Error saving user:", error);
-    }
-  };
-
-  useEffect(() => {
-    if (user) {
-      saveUser(user);
-    }
-  }, [user]);
-
   const getToken = async () => {
-    if (!user) return undefined;
+    if (!firebaseUser) return undefined;
     try {
-      const token = await user.getIdToken();
+      const token = await firebaseUser.getIdToken();
       return token;
     } catch (error) {
       console.error("Error getting token:", error);
@@ -74,23 +79,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const logout = async () => {
+    if (!firebaseUser) return;
     try {
       setLoading(true);
+      const uid = firebaseUser.uid;
       await logoutFirebase();
-      localStorage.removeItem(`registered-${user?.uid}`);
-      clearToken();
+      localStorage.removeItem(`registered-${uid}`);
       toast.success("Successfully logged out");
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Logout failed";
       console.error("Logout failed:", errorMessage);
       toast.error("Failed to logout. Please try again.");
-    } finally {
       setLoading(false);
     }
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, logout, getToken }}>
+    <AuthContext.Provider
+      value={{ firebaseUser, user, loading, logout, getToken }}
+    >
       {children}
     </AuthContext.Provider>
   );

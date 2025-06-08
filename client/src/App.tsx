@@ -6,6 +6,9 @@ import BasicPageWrapper from "./components/PageWrappers/BasicPageWrapper";
 import { Toaster } from "./components/ui/sonner";
 import PrivateRouteWrapper from "./components/PageWrappers/PrivateRouteWrapper";
 import SidebarWrapper from "./components/Navigation/SidebarWrapper";
+import PublicRouteWrapper from "./components/PageWrappers/PublicRouteWrapper";
+import { AuthProvider } from "./context/AuthContext";
+import { ChatProvider } from "./context/ChatContext";
 
 const router = createBrowserRouter([
   {
@@ -18,7 +21,11 @@ const router = createBrowserRouter([
   },
   {
     path: "/signin",
-    element: <SignIn />,
+    element: (
+      <PublicRouteWrapper>
+        <SignIn />
+      </PublicRouteWrapper>
+    ),
   },
   {
     path: "/chats",
@@ -35,7 +42,11 @@ const router = createBrowserRouter([
 function App() {
   return (
     <>
-      <RouterProvider router={router} />
+      <AuthProvider>
+        <ChatProvider>
+          <RouterProvider router={router} />
+        </ChatProvider>
+      </AuthProvider>
       <Toaster />
     </>
   );

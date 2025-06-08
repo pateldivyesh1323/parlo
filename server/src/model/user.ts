@@ -9,7 +9,7 @@ const userSchema = new Schema(
     },
     name: {
       type: String,
-      required: true,
+      default: "",
     },
     email: {
       type: String,
@@ -19,7 +19,6 @@ const userSchema = new Schema(
     },
     photoURL: {
       type: String,
-      required: false,
     },
   },
   {

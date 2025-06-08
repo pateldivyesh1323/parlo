@@ -99,11 +99,11 @@ export default function SideNavbar() {
               <Avatar className="h-6 w-6">
                 <AvatarImage src={user?.photoURL || ""} />
                 <AvatarFallback>
-                  {user?.displayName?.charAt(0) || user?.email?.charAt(0)}
+                  {user?.name?.charAt(0) || user?.email?.charAt(0)}
                 </AvatarFallback>
               </Avatar>
               <div className="flex flex-col items-start group-data-[collapsible=icon]:hidden">
-                <span className="text-sm font-medium">{user?.displayName}</span>
+                <span className="text-sm font-medium">{user?.name}</span>
                 <span className="text-xs text-muted-foreground">
                   {user?.email}
                 </span>
