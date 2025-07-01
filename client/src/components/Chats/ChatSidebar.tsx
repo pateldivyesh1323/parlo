@@ -9,7 +9,9 @@ export function ChatSidebar({ className }: { className?: string }) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   return (
-    <div className={cn("flex flex-col h-full bg-gray-50 border-r", className)}>
+    <div
+      className={cn("flex flex-col h-full bg-background border-r", className)}
+    >
       <div className="p-2 border-b flex justify-between items-center">
         <h3 className="font-medium">Your chats</h3>
         <CreateChatDialog
@@ -19,9 +21,9 @@ export function ChatSidebar({ className }: { className?: string }) {
             <Button
               size="sm"
               variant="ghost"
-              className="h-8 w-8 p-0 hover:bg-red-50"
+              className="h-8 w-8 p-0 hover:bg-accent"
             >
-              <Plus className="w-4 h-4 text-red-500" />
+              <Plus className="w-4 h-4 text-primary" />
             </Button>
           }
         />

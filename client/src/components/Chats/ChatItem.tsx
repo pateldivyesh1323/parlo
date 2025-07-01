@@ -33,30 +33,30 @@ const ChatItem = ({ chat }: { chat: Chat }) => {
   const isSelected = selectedChat?._id === chat._id;
 
   return (
-    <div className="border-b border-gray-300 last:border-b-0 p-2">
+    <div className="border-b border-border last:border-b-0 p-2">
       <div
         className={cn(
           "flex items-center p-2 cursor-pointer transition-colors gap-2 rounded-md",
-          isSelected && "bg-blue-300",
+          isSelected && "bg-accent",
         )}
         onClick={() => !isSelected && setSelectedChat(chat)}
       >
         <Avatar className="h-10 w-10">
           <AvatarImage src={chatPhotoURL || ""} />
-          <AvatarFallback className="bg-gray-200 text-gray-700 font-medium">
+          <AvatarFallback className="bg-secondary text-secondary-foreground font-medium">
             {chatTitle?.charAt(0)?.toUpperCase()}
           </AvatarFallback>
         </Avatar>
         <div className="flex flex-col">
           <div
             className={cn(
-              "text-sm font-semibold text-gray-900 truncate w-full",
-              isSelected && "text-gray-900",
+              "text-sm font-semibold text-foreground truncate w-full",
+              isSelected && "text-accent-foreground",
             )}
           >
             {chatTitle}
           </div>
-          <div className="text-xs text-gray-500 truncate w-full">
+          <div className="text-xs text-muted-foreground truncate w-full">
             {latestMessageContent}
           </div>
         </div>

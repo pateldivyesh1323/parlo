@@ -1,4 +1,5 @@
 import { ChatSidebar, ChatProvider } from "@/components/Chats";
+import Logo from "@/components/Common/Logo";
 
 export default function Chats() {
   return (
@@ -9,10 +10,8 @@ export default function Chats() {
           <div className="max-w-4xl mx-auto">
             <div className="bg-card rounded-lg border border-border p-8 text-center">
               <div className="space-y-4">
-                <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto">
-                  <span className="text-primary-foreground font-bold text-xl">
-                    💬
-                  </span>
+                <div className="flex justify-center ">
+                  <Logo showText={false} size="lg" />
                 </div>
 
                 <h2 className="text-xl font-semibold">
