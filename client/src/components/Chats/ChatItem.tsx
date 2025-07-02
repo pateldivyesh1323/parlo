@@ -2,10 +2,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { useChat } from "@/context/ChatContext";
 import { cn } from "@/lib/utils";
-
-const getNormalChatDetails = (chat: Chat, user: User) => {
-  return chat.users.find((participant) => participant.email !== user.email);
-};
+import { getNormalChatDetails } from "@/helpers/Chat";
 
 const ChatItem = ({ chat }: { chat: Chat }) => {
   const { user } = useAuth();
@@ -14,23 +11,8 @@ const ChatItem = ({ chat }: { chat: Chat }) => {
 
   if (!user) return null;
 
-  const chatDetails = chat.isGroupChat
-    ? chat
-    : getNormalChatDetails(chat, user);
-
-  const chatTitle =
-    chatDetails && "email" in chatDetails
-      ? chatDetails.name || chatDetails.email
-      : chatDetails?.name;
-  const chatPhotoURL = chatDetails?.photoURL;
-  const latestMessage = chat.latestMessage;
-
-  const latestMessageContent =
-    latestMessage?.originalContent.value?.length > 20
-      ? latestMessage?.originalContent.value.slice(0, 20) + "..."
-      : latestMessage?.originalContent.value || "No messages yet";
-
-  const isSelected = selectedChat?._id === chat._id;
+  const { chatTitle, chatPhotoURL, latestMessageContent, isSelected } =
+    getNormalChatDetails(chat, user, selectedChat);
 
   return (
     <div className="border-b border-border last:border-b-0 p-2">

@@ -10,8 +10,8 @@ const ChatList = () => {
   const { setSelectedChat } = useChat();
 
   useEffect(() => {
-    if (chats) {
-      setSelectedChat(chats[0] || null);
+    if (chats && chats.length > 0) {
+      setSelectedChat(chats[0]);
     }
   }, [chats, setSelectedChat]);
 

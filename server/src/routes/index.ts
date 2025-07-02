@@ -4,6 +4,7 @@ import cors from "cors";
 import auth from "./auth";
 import { errorMiddleware } from "../middlewares/errorMiddleware";
 import chat from "./chat";
+import message from "./message";
 
 export = (app: express.Application) => {
   // Middlewares
@@ -26,6 +27,7 @@ export = (app: express.Application) => {
   // Authentication routes
   app.use("/api/auth", auth);
   app.use("/api/chat", chat);
+  app.use("/api/message", message);
 
   // Error handling middleware
   app.use(errorMiddleware);

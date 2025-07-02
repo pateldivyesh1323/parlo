@@ -5,10 +5,12 @@ import {
   useRef,
   useState,
   type ReactNode,
+  useCallback,
 } from "react";
 import { useAuth } from "./AuthContext";
 import { getChatSocket, disconnectChatSocket } from "@/socket";
 import type { Socket } from "socket.io-client";
+import { apiClient } from "@/lib/apiClient";
 
 interface ChatContextType {
   selectedChat: Chat | null;
@@ -96,12 +98,18 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     };
   }, [user]);
 
-  useEffect(() => {
+  const connectToChat = useCallback(async () => {
     const socket = socketRef.current;
     if (!socket?.connected || !selectedChat) {
       return;
     }
     console.log("Joining chat:", selectedChat._id);
+
+    const { data } = await apiClient.get(
+      `/api/message/get-all?chatId=${selectedChat._id}`,
+    );
+
+    setMessages(data.data);
 
     socket.emit("join_chat", selectedChat._id);
 
@@ -114,7 +122,11 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       socket.off("new_message");
       setMessages([]);
     };
-  }, [selectedChat, socketConnected]);
+  }, [socketRef, selectedChat]);
+
+  useEffect(() => {
+    connectToChat();
+  }, [selectedChat, socketConnected, connectToChat]);
 
   const sendMessage = async (message: string) => {
     const socket = socketRef.current;
