@@ -7,7 +7,9 @@ const senderBox = (message: Message) => {
       <div className="relative bg-secondary-foreground text-secondary rounded-lg rounded-tr-none p-2 max-w-[80%] flex items-end gap-4">
         <div className="absolute top-0 right-0 w-0 h-0 border-l-[8px] border-l-secondary-foreground border-b-[8px] border-b-transparent translate-x-full"></div>
 
-        <p className="text-sm">{message.originalContent.value}</p>
+        <p className="text-sm whitespace-pre-wrap">
+          {message.originalContent.value}
+        </p>
         <span className="text-tiny">
           {new Date(message?.createdAt).toLocaleTimeString("en-US", {
             hour: "2-digit",
@@ -26,8 +28,9 @@ const receiverBox = (message: Message) => {
         <span className="font-medium flex items-center gap-1">
           <Avatar className="h-5 w-5">
             <AvatarImage src={message.sender.photoURL || ""} />
-            <AvatarFallback className="text-secondary-foreground text-lg">
-              {message.sender.name?.charAt(0)?.toUpperCase()}
+            <AvatarFallback className="text-secondary-foreground text-xs">
+              {message.sender.name?.charAt(0)?.toUpperCase() ||
+                message.sender.email?.charAt(0)?.toUpperCase()}
             </AvatarFallback>
           </Avatar>
           {message.sender.name || message.sender.email}
@@ -36,7 +39,9 @@ const receiverBox = (message: Message) => {
 
       <div className="relative bg-muted rounded-lg rounded-tl-none p-2 max-w-[80%] flex items-end gap-4">
         <div className="absolute top-0 left-0 w-0 h-0 border-r-[8px] border-r-muted border-b-[8px] border-b-transparent -translate-x-full"></div>
-        <p className="text-sm">{message.originalContent.value}</p>
+        <p className="text-sm whitespace-pre-wrap">
+          {message.originalContent.value}
+        </p>
         <span className="text-tiny text-muted-foreground">
           {new Date(message?.createdAt).toLocaleTimeString("en-US", {
             hour: "2-digit",

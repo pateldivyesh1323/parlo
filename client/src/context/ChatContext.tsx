@@ -36,6 +36,9 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const [socketConnected, setSocketConnected] = useState(false);
 
   const socketRef = useRef<Socket | null>(null);
+  const cleanupChatRef = useRef<(() => void) | null>(null);
+  const connectionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isConnectingRef = useRef(false);
 
   useEffect(() => {
     if (!user) {
@@ -45,6 +48,15 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         socketRef.current = null;
         setSocketConnected(false);
       }
+      if (cleanupChatRef.current) {
+        cleanupChatRef.current();
+        cleanupChatRef.current = null;
+      }
+      if (connectionTimeoutRef.current) {
+        clearTimeout(connectionTimeoutRef.current);
+        connectionTimeoutRef.current = null;
+      }
+      isConnectingRef.current = false;
       return;
     }
 
@@ -53,35 +65,66 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
+    if (isConnectingRef.current) {
+      console.log("Socket connection already in progress");
+      return;
+    }
+
     const connectSocket = async () => {
       try {
+        isConnectingRef.current = true;
+
+        if (connectionTimeoutRef.current) {
+          clearTimeout(connectionTimeoutRef.current);
+        }
+
+        connectionTimeoutRef.current = setTimeout(() => {
+          console.log("❌ Socket connection timeout, retrying...");
+          if (socketRef.current && !socketRef.current.connected) {
+            socketRef.current.removeAllListeners();
+            disconnectChatSocket();
+            socketRef.current = null;
+            setSocketConnected(false);
+            isConnectingRef.current = false;
+          }
+        }, 10000);
+
         const socket = await getChatSocket();
 
         if (!socket) {
           console.error("❌ getChatSocket returned null/undefined");
           setSocketConnected(false);
+          isConnectingRef.current = false;
           return;
         }
 
         socket.on("connect", () => {
           console.log("✅ Connected to /chat:", socket.id);
           setSocketConnected(true);
+          isConnectingRef.current = false;
+          if (connectionTimeoutRef.current) {
+            clearTimeout(connectionTimeoutRef.current);
+            connectionTimeoutRef.current = null;
+          }
         });
 
         socket.on("disconnect", (reason) => {
           console.log("❌ Disconnected from /chat, reason:", reason);
           setSocketConnected(false);
+          isConnectingRef.current = false;
         });
 
         socket.on("connect_error", (err: Error) => {
           console.error("Socket connection error:", err.message);
           setSocketConnected(false);
+          isConnectingRef.current = false;
         });
 
         socketRef.current = socket;
       } catch (error) {
         console.error("Failed to initialize socket:", error);
         setSocketConnected(false);
+        isConnectingRef.current = false;
       }
     };
 
@@ -95,6 +138,15 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         socketRef.current = null;
         setSocketConnected(false);
       }
+      if (cleanupChatRef.current) {
+        cleanupChatRef.current();
+        cleanupChatRef.current = null;
+      }
+      if (connectionTimeoutRef.current) {
+        clearTimeout(connectionTimeoutRef.current);
+        connectionTimeoutRef.current = null;
+      }
+      isConnectingRef.current = false;
     };
   }, [user]);
 
@@ -103,29 +155,48 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     if (!socket?.connected || !selectedChat) {
       return;
     }
+
+    if (cleanupChatRef.current) {
+      cleanupChatRef.current();
+      cleanupChatRef.current = null;
+    }
+
     console.log("Joining chat:", selectedChat._id);
 
-    const { data } = await apiClient.get(
-      `/api/message/get-all?chatId=${selectedChat._id}`,
-    );
+    try {
+      const { data } = await apiClient.get(
+        `/api/message/get-all?chatId=${selectedChat._id}`,
+      );
 
-    setMessages(data.data);
+      setMessages(data.data);
 
-    socket.emit("join_chat", selectedChat._id);
+      socket.emit("join_chat", selectedChat._id);
 
-    socket.on("new_message", (msg: Message) => {
-      setMessages((prev) => [...prev, msg]);
-    });
+      const handleNewMessage = (msg: Message) => {
+        setMessages((prev) => [...prev, msg]);
+      };
 
-    return () => {
-      socket.emit("leave_chat", selectedChat._id);
-      socket.off("new_message");
-      setMessages([]);
-    };
-  }, [socketRef, selectedChat]);
+      socket.on("new_message", handleNewMessage);
+
+      const cleanup = () => {
+        socket.emit("leave_chat", selectedChat._id);
+        socket.off("new_message", handleNewMessage);
+        setMessages([]);
+      };
+
+      cleanupChatRef.current = cleanup;
+    } catch (error) {
+      console.error("Failed to connect to chat:", error);
+    }
+  }, [selectedChat]);
 
   useEffect(() => {
-    connectToChat();
+    if (socketConnected && selectedChat) {
+      connectToChat();
+    } else if (!selectedChat && cleanupChatRef.current) {
+      cleanupChatRef.current();
+      cleanupChatRef.current = null;
+    }
   }, [selectedChat, socketConnected, connectToChat]);
 
   const sendMessage = async (message: string) => {
