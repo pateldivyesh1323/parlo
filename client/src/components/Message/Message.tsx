@@ -1,4 +1,5 @@
 import { useAuth } from "@/context/AuthContext";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 
 const senderBox = (message: Message) => {
   return (
@@ -8,7 +9,10 @@ const senderBox = (message: Message) => {
 
         <p className="text-sm">{message.originalContent.value}</p>
         <span className="text-tiny">
-          {new Date(message?.createdAt).toLocaleTimeString()}
+          {new Date(message?.createdAt).toLocaleTimeString("en-US", {
+            hour: "2-digit",
+            minute: "2-digit",
+          })}
         </span>
       </div>
     </div>
@@ -19,7 +23,13 @@ const receiverBox = (message: Message) => {
   return (
     <div className="flex flex-col gap-2 items-start">
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        <span className="font-medium">
+        <span className="font-medium flex items-center gap-1">
+          <Avatar className="h-5 w-5">
+            <AvatarImage src={message.sender.photoURL || ""} />
+            <AvatarFallback className="text-secondary-foreground text-lg">
+              {message.sender.name?.charAt(0)?.toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
           {message.sender.name || message.sender.email}
         </span>
       </div>
@@ -28,7 +38,10 @@ const receiverBox = (message: Message) => {
         <div className="absolute top-0 left-0 w-0 h-0 border-r-[8px] border-r-muted border-b-[8px] border-b-transparent -translate-x-full"></div>
         <p className="text-sm">{message.originalContent.value}</p>
         <span className="text-tiny text-muted-foreground">
-          {new Date(message?.createdAt).toLocaleTimeString()}
+          {new Date(message?.createdAt).toLocaleTimeString("en-US", {
+            hour: "2-digit",
+            minute: "2-digit",
+          })}
         </span>
       </div>
     </div>

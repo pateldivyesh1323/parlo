@@ -24,7 +24,7 @@ export default function MessageInput() {
   const isDisabled = !selectedChat || !socketConnected || !message.trim();
 
   return (
-    <div className="flex gap-2 p-4 border-t bg-background">
+    <div className="flex gap-2 p-4 border-t bg-neutral-200">
       <Input
         value={message}
         onChange={(e) => setMessage(e.target.value)}
@@ -37,7 +37,7 @@ export default function MessageInput() {
             : "Type a message..."
         }
         disabled={!selectedChat || !socketConnected}
-        className="flex-1"
+        className="flex-1 bg-white"
       />
       <Button onClick={handleSend} disabled={isDisabled} size="default">
         Send

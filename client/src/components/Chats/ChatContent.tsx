@@ -28,7 +28,9 @@ export default function ChatContent() {
           {chatTitle}
         </div>
       </div>
-      <MessageBox />
+      <div className="flex-1 min-h-0">
+        <MessageBox />
+      </div>
       <MessageInput />
     </div>
   );
