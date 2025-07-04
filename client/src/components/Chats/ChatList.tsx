@@ -1,13 +1,10 @@
 import { MessageSquare } from "lucide-react";
-import { useGetAllChats } from "@/hooks/useChat";
 import ChatItem from "./ChatItem";
 import { useChat } from "@/context/ChatContext";
 import { useEffect } from "react";
 
 const ChatList = () => {
-  const { data: chats } = useGetAllChats();
-
-  const { setSelectedChat } = useChat();
+  const { chats, setSelectedChat } = useChat();
 
   useEffect(() => {
     if (chats && chats.length > 0) {

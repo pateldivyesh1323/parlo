@@ -28,6 +28,10 @@ const createMessage = async (
     translatedContents: [],
   });
 
+  await Chat.findByIdAndUpdate(chatId, {
+    latestMessage: newMessage._id,
+  });
+
   await newMessage.populate("sender");
   await newMessage.populate("originalContent");
 

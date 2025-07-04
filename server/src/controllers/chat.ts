@@ -84,7 +84,10 @@ const getAllChats = async (userId: string) => {
   }
 
   const chats = await Chat.find({ users: { $in: [user._id] } })
-    .populate("latestMessage")
+    .populate({
+      path: "latestMessage",
+      populate: { path: "originalContent" },
+    })
     .populate("users");
   return chats;
 };

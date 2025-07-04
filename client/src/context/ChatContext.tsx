@@ -13,6 +13,8 @@ import type { Socket } from "socket.io-client";
 import { apiClient } from "@/lib/apiClient";
 
 interface ChatContextType {
+  chats: Chat[];
+  setChats: (chats: Chat[]) => void;
   selectedChat: Chat | null;
   setSelectedChat: (chat: Chat | null) => void;
   messages: Message[];
@@ -21,6 +23,8 @@ interface ChatContextType {
 }
 
 const ChatContext = createContext<ChatContextType>({
+  chats: [],
+  setChats: () => {},
   selectedChat: null,
   setSelectedChat: () => {},
   messages: [],
@@ -31,6 +35,7 @@ const ChatContext = createContext<ChatContextType>({
 export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
 
+  const [chats, setChats] = useState<Chat[]>([]);
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [socketConnected, setSocketConnected] = useState(false);
@@ -69,6 +74,13 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       console.log("Socket connection already in progress");
       return;
     }
+
+    const fetchChats = async () => {
+      const { data } = await apiClient.get("/api/chat/get-all");
+      setChats(data.data);
+    };
+
+    fetchChats();
 
     const connectSocket = async () => {
       try {
@@ -174,6 +186,15 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
 
       const handleNewMessage = (msg: Message) => {
         setMessages((prev) => [...prev, msg]);
+        setChats((prev) => {
+          const chatIndex = prev.findIndex(
+            (chat) => chat._id === selectedChat._id,
+          );
+          if (chatIndex !== -1) {
+            prev[chatIndex].latestMessage = msg;
+          }
+          return prev;
+        });
       };
 
       socket.on("new_message", handleNewMessage);
@@ -211,6 +232,8 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   return (
     <ChatContext.Provider
       value={{
+        chats,
+        setChats,
         selectedChat,
         setSelectedChat,
         messages,
