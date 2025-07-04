@@ -63,12 +63,22 @@ const socketAuthMiddleware = async (
       return next(new Error("Unauthorized: Invalid token payload"));
     }
 
+    const user = await User.findOne({ firebaseId: decodedToken.uid })
+      .select("_id")
+      .lean();
+
+    if (!user) {
+      return next(new Error("Unauthorized: User not found"));
+    }
+
     socket.data.firebaseId = decodedToken.uid;
     socket.data.authorized = "true";
+    socket.data.user_id = user._id.toString();
 
     socket.data.user = {
       uid: decodedToken.uid,
       email: decodedToken.email,
+      userId: user._id.toString(),
     };
 
     next();

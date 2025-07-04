@@ -3,8 +3,6 @@ const getNormalChatDetails = (
   user: User,
   selectedChat: Chat | null,
 ) => {
-  console.log("Chat", chat);
-
   const chatDetails = chat?.isGroupChat
     ? chat
     : chat?.users.find((participant) => participant.email !== user.email);

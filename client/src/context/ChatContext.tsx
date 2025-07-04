@@ -20,6 +20,12 @@ interface ChatContextType {
   messages: Message[];
   socketConnected: boolean;
   sendMessage: (message: string) => void;
+  typingUsers: {
+    chatId: string;
+    users: string[];
+  }[];
+  startTyping: () => void;
+  stopTyping: () => void;
 }
 
 const ChatContext = createContext<ChatContextType>({
@@ -30,6 +36,9 @@ const ChatContext = createContext<ChatContextType>({
   messages: [],
   socketConnected: false,
   sendMessage: () => {},
+  typingUsers: [],
+  startTyping: () => {},
+  stopTyping: () => {},
 });
 
 export const ChatProvider = ({ children }: { children: ReactNode }) => {
@@ -39,11 +48,18 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [socketConnected, setSocketConnected] = useState(false);
+  const [typingUsers, setTypingUsers] = useState<
+    {
+      chatId: string;
+      users: string[];
+    }[]
+  >([]);
 
   const socketRef = useRef<Socket | null>(null);
   const cleanupChatRef = useRef<(() => void) | null>(null);
   const connectionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isConnectingRef = useRef(false);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -197,12 +213,55 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         });
       };
 
+      const handleTyping = (data: {
+        user_id: string;
+        isTyping: boolean;
+        chatId: string;
+      }) => {
+        setTypingUsers((prev) => {
+          const existingChatIndex = prev.findIndex(
+            (p) => p.chatId === data.chatId,
+          );
+
+          if (data.isTyping) {
+            if (existingChatIndex === -1) {
+              return [...prev, { chatId: data.chatId, users: [data.user_id] }];
+            } else {
+              const updated = [...prev];
+              if (!updated[existingChatIndex].users.includes(data.user_id)) {
+                updated[existingChatIndex] = {
+                  ...updated[existingChatIndex],
+                  users: [...updated[existingChatIndex].users, data.user_id],
+                };
+              }
+              return updated;
+            }
+          } else {
+            if (existingChatIndex === -1) {
+              return prev;
+            } else {
+              const updated = [...prev];
+              updated[existingChatIndex] = {
+                ...updated[existingChatIndex],
+                users: updated[existingChatIndex].users.filter(
+                  (id) => id !== data.user_id,
+                ),
+              };
+              return updated;
+            }
+          }
+        });
+      };
+
       socket.on("new_message", handleNewMessage);
+      socket.on("typing", handleTyping);
 
       const cleanup = () => {
         socket.emit("leave_chat", selectedChat._id);
         socket.off("new_message", handleNewMessage);
+        socket.off("typing", handleTyping);
         setMessages([]);
+        setTypingUsers([]);
       };
 
       cleanupChatRef.current = cleanup;
@@ -229,6 +288,39 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
+  const stopTyping = useCallback(() => {
+    const socket = socketRef.current;
+    if (!socket?.connected || !selectedChat) return;
+
+    socket.emit("typing", {
+      chatId: selectedChat._id,
+      isTyping: false,
+    });
+
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = null;
+    }
+  }, [selectedChat]);
+
+  const startTyping = useCallback(() => {
+    const socket = socketRef.current;
+    if (!socket?.connected || !selectedChat) return;
+
+    socket.emit("typing", {
+      chatId: selectedChat._id,
+      isTyping: true,
+    });
+
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    typingTimeoutRef.current = setTimeout(() => {
+      stopTyping();
+    }, 1000);
+  }, [selectedChat, stopTyping]);
+
   return (
     <ChatContext.Provider
       value={{
@@ -239,6 +331,9 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         messages,
         socketConnected,
         sendMessage,
+        typingUsers,
+        startTyping,
+        stopTyping,
       }}
     >
       {children}

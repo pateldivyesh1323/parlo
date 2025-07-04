@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 export default function MessageInput() {
   const [message, setMessage] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const { sendMessage, selectedChat, socketConnected } = useChat();
+  const { sendMessage, selectedChat, socketConnected, startTyping } = useChat();
 
   const handleSend = () => {
     if (!message.trim() || !selectedChat || !socketConnected) return;
@@ -40,6 +40,7 @@ export default function MessageInput() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setMessage(e.target.value);
+    startTyping();
   };
 
   const isDisabled = !selectedChat || !socketConnected || !message.trim();

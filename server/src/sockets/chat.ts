@@ -16,8 +16,18 @@ export default function setupChatNamespace(namespace: Namespace) {
       socket.join(chatId.toString());
     });
 
-    socket.on("join_chat", (chatId: string) => {
-      socket.join(chatId);
+    socket.on("join_chat", async (chatId: string) => {
+      try {
+        const hasAccess = await hasUserAccess(firebaseId, chatId);
+        if (!hasAccess) {
+          socket.emit("error", "You do not have access to this chat");
+          return;
+        }
+        socket.join(chatId);
+      } catch (error) {
+        console.error("Error joining chat:", error);
+        socket.emit("error", "Failed to join chat");
+      }
     });
 
     socket.on("leave_chat", (chatId: string) => {
@@ -39,6 +49,25 @@ export default function setupChatNamespace(namespace: Namespace) {
       } catch (error) {
         console.error("Error sending message:", error);
         socket.emit("error", "Failed to send message");
+      }
+    });
+
+    socket.on("typing", async (data: any) => {
+      try {
+        const { chatId, isTyping } = data;
+        const hasAccess = await hasUserAccess(firebaseId, chatId);
+        if (!hasAccess) {
+          socket.emit("error", "You do not have access to this chat");
+          return;
+        }
+        socket.to(chatId).emit("typing", {
+          user_id: socket.data.user_id,
+          isTyping: !!isTyping,
+          chatId,
+        });
+      } catch (error) {
+        console.error("Error handling typing event:", error);
+        socket.emit("error", "Failed to handle typing event");
       }
     });
 
