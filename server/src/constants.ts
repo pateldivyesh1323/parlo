@@ -1,9 +1,7 @@
-export const QUERY_KEYS = {
-  CHATS: "chats",
-  USER: {
-    GET_USER: "get-user",
-    GET_USER_PREFERENCES: "get-user-preferences",
-  },
+export type Language = {
+  code: string;
+  name: string;
+  nativeName: string;
 };
 
 export const languages: Language[] = [

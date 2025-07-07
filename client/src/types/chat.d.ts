@@ -39,3 +39,9 @@ enum ContentType {
   PDF = "application/pdf",
   OCTET_STREAM = "application/octet-stream",
 }
+
+type Language = {
+  code: string;
+  name: string;
+  nativeName: string;
+};

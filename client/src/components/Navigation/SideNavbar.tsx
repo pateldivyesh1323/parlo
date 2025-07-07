@@ -25,6 +25,14 @@ const menuItems = [
   },
 ];
 
+const footerMenuItems = [
+  {
+    title: "Settings",
+    slug: "/settings",
+    icon: Settings,
+  },
+];
+
 export default function SideNavbar() {
   const { user } = useAuth();
   const location = useLocation();
@@ -88,12 +96,32 @@ export default function SideNavbar() {
         <SidebarFooter className="border-t">
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton>
-                <Settings className="h-4 w-4" />
-                <span className="group-data-[collapsible=icon]:hidden">
-                  Settings
-                </span>
-              </SidebarMenuButton>
+              {footerMenuItems.map((item) => {
+                const isActive = location.pathname === item.slug;
+                const Icon = item.icon;
+
+                return (
+                  <SidebarMenuItem
+                    key={item.slug}
+                    onClick={() => {
+                      navigate(item.slug);
+                    }}
+                  >
+                    <SidebarMenuButton
+                      className={`w-full justify-start ${
+                        isActive
+                          ? "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground transition-all duration-100"
+                          : ""
+                      }`}
+                    >
+                      <Icon className="h-4 w-4" />
+                      <span className="group-data-[collapsible=icon]:hidden">
+                        {item.title}
+                      </span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenuItem>
             <SidebarMenuItem className="flex items-center gap-2 w-full bg-white rounded-md p-2">
               <Avatar className="h-6 w-6">

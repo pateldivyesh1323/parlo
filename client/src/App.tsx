@@ -9,6 +9,7 @@ import SidebarWrapper from "./components/Navigation/SidebarWrapper";
 import PublicRouteWrapper from "./components/PageWrappers/PublicRouteWrapper";
 import { AuthProvider } from "./context/AuthContext";
 import { ChatProvider } from "./context/ChatContext";
+import Settings from "./pages/Settings";
 
 const router = createBrowserRouter([
   {
@@ -33,6 +34,16 @@ const router = createBrowserRouter([
       <PrivateRouteWrapper>
         <SidebarWrapper>
           <Chats />
+        </SidebarWrapper>
+      </PrivateRouteWrapper>
+    ),
+  },
+  {
+    path: "/settings",
+    element: (
+      <PrivateRouteWrapper>
+        <SidebarWrapper>
+          <Settings />
         </SidebarWrapper>
       </PrivateRouteWrapper>
     ),

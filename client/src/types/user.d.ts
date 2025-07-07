@@ -5,3 +5,9 @@ interface User {
   firebaseId: string;
   photoURL: string;
 }
+
+interface UserSettings {
+  _id: string;
+  userId: string;
+  translationLanguage: string;
+}

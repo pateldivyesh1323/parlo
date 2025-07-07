@@ -4,6 +4,7 @@ import { auth } from "@/lib/firebase";
 import { toast } from "sonner";
 import { logout as logoutFirebase } from "@/lib/authActions";
 import { setToken, clearToken, apiClient } from "@/lib/apiClient";
+import { useGetUser } from "@/hooks/useAuth";
 
 interface AuthContextType {
   firebaseUser: FirebaseUser | null;
@@ -23,8 +24,10 @@ const AuthContext = createContext<AuthContextType>({
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [firebaseUser, setfirebaseUser] = useState<FirebaseUser | null>(null);
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [userQueryEnabled, setUserQueryEnabled] = useState(false);
+
+  const { data: user, isLoading: userLoading } = useGetUser(userQueryEnabled);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
@@ -37,30 +40,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             `registered-${fbUser.uid}`,
           );
           if (!alreadyRegistered) {
-            const { data } = await apiClient.post<{ data: User }>(
-              `/api/auth/register`,
-            );
-            setUser(data.data);
+            await apiClient.post<{ data: User }>(`/api/auth/register`);
             localStorage.setItem(`registered-${fbUser.uid}`, "true");
-          } else {
-            const { data } = await apiClient.get<{ data: User }>(
-              `/api/auth/get-user`,
-            );
-            setUser(data.data);
           }
+          setUserQueryEnabled(true);
         } catch (error) {
           console.error("Error getting user data:", error);
-          setUser(null);
           setfirebaseUser(null);
           clearToken();
+          setUserQueryEnabled(false);
         } finally {
-          setLoading(false);
+          setAuthLoading(false);
         }
       } else {
         setfirebaseUser(null);
-        setUser(null);
         clearToken();
-        setLoading(false);
+        setUserQueryEnabled(false);
+        setAuthLoading(false);
       }
     });
 
@@ -81,7 +77,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const logout = async () => {
     if (!firebaseUser) return;
     try {
-      setLoading(true);
+      setAuthLoading(true);
       const uid = firebaseUser.uid;
       await logoutFirebase();
       localStorage.removeItem(`registered-${uid}`);
@@ -90,13 +86,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const errorMessage = err instanceof Error ? err.message : "Logout failed";
       console.error("Logout failed:", errorMessage);
       toast.error("Failed to logout. Please try again.");
-      setLoading(false);
+      setAuthLoading(false);
     }
   };
 
+  const loading = authLoading || userLoading;
+
   return (
     <AuthContext.Provider
-      value={{ firebaseUser, user, loading, logout, getToken }}
+      value={{ firebaseUser, user: user || null, loading, logout, getToken }}
     >
       {children}
     </AuthContext.Provider>
