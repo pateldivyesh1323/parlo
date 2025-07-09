@@ -8,6 +8,7 @@ export default function setupChatNamespace(namespace: Namespace) {
 
   namespace.on("connection", async (socket: Socket) => {
     const firebaseId = socket.data.firebaseId;
+    const userId = socket.data.user_id;
     console.log("🔌 [CHAT] Client connected:", firebaseId);
 
     const userChats = await getAllChatIds(firebaseId);
@@ -43,7 +44,7 @@ export default function setupChatNamespace(namespace: Namespace) {
           return;
         }
 
-        const newMessage = await createMessage(chatId, message, firebaseId);
+        const newMessage = await createMessage(chatId, message, userId);
 
         namespace.to(chatId).emit("new_message", newMessage);
       } catch (error) {
