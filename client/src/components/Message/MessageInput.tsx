@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useChat } from "@/context/ChatContext";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -7,13 +7,25 @@ import { cn } from "@/lib/utils";
 export default function MessageInput() {
   const [message, setMessage] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const { sendMessage, selectedChat, socketConnected, startTyping } = useChat();
+  const {
+    sendMessage,
+    selectedChat,
+    socketConnected,
+    startTyping,
+    stopTyping,
+  } = useChat();
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleSend = () => {
     if (!message.trim() || !selectedChat || !socketConnected) return;
 
     sendMessage(message.trim());
     setMessage("");
+    stopTyping();
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = null;
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -38,10 +50,29 @@ export default function MessageInput() {
     adjustTextareaHeight();
   }, [message]);
 
+  const debouncedStopTyping = useCallback(() => {
+    stopTyping();
+  }, [stopTyping]);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setMessage(e.target.value);
     startTyping();
+
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+    typingTimeoutRef.current = setTimeout(() => {
+      debouncedStopTyping();
+    }, 2000);
   };
+
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const isDisabled = !selectedChat || !socketConnected || !message.trim();
 

@@ -16,6 +16,7 @@ interface TranslatedContent {
 
 interface Message {
   _id: string;
+  chat: string;
   sender: User;
   originalContent: Content;
   translatedContents: TranslatedContent[];
