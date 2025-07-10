@@ -4,13 +4,13 @@ import { useChat } from "@/context/ChatContext";
 import { useEffect } from "react";
 
 const ChatList = () => {
-  const { chats, setSelectedChat } = useChat();
+  const { chats, setSelectedChat, selectedChat } = useChat();
 
   useEffect(() => {
-    if (chats && chats.length > 0) {
+    if (chats && chats.length > 0 && !selectedChat) {
       setSelectedChat(chats[0]);
     }
-  }, [chats, setSelectedChat]);
+  }, [chats, setSelectedChat, selectedChat]);
 
   return (
     <div className="flex-1 overflow-y-auto">
