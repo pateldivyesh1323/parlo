@@ -3,8 +3,9 @@ import { onAuthStateChanged, type User as FirebaseUser } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { toast } from "sonner";
 import { logout as logoutFirebase } from "@/lib/authActions";
-import { setToken, clearToken, apiClient } from "@/lib/apiClient";
+import { setToken, clearToken, apiClient, queryClient } from "@/lib/apiClient";
 import { useGetUser } from "@/hooks/useAuth";
+import { QUERY_KEYS } from "@/constants";
 
 interface AuthContextType {
   firebaseUser: FirebaseUser | null;
@@ -56,6 +57,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setfirebaseUser(null);
         clearToken();
         setUserQueryEnabled(false);
+        queryClient.removeQueries({ queryKey: [QUERY_KEYS.USER.GET_USER] });
         setAuthLoading(false);
       }
     });
@@ -81,11 +83,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const uid = firebaseUser.uid;
       await logoutFirebase();
       localStorage.removeItem(`registered-${uid}`);
+      queryClient.removeQueries({ queryKey: [QUERY_KEYS.USER.GET_USER] });
       toast.success("Successfully logged out");
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Logout failed";
       console.error("Logout failed:", errorMessage);
       toast.error("Failed to logout. Please try again.");
+    } finally {
       setAuthLoading(false);
     }
   };
