@@ -3,9 +3,12 @@ import { useChat } from "@/context/ChatContext";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import MicrophoneInput from "./MicrophoneInput";
 
 export default function MessageInput() {
   const [message, setMessage] = useState("");
+  const [activeInput, setActiveInput] = useState<"text" | "voice" | "">("");
+
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const {
     sendMessage,
@@ -66,6 +69,22 @@ export default function MessageInput() {
     }, 2000);
   };
 
+  const handleRecordingStart = () => {
+    setActiveInput("voice");
+  };
+
+  const handleRecordingClear = () => {
+    setActiveInput("");
+  };
+
+  useEffect(() => {
+    if (message.length > 0) {
+      setActiveInput("text");
+    } else if (activeInput !== "voice") {
+      setActiveInput("");
+    }
+  }, [message, activeInput]);
+
   useEffect(() => {
     return () => {
       if (typingTimeoutRef.current) {
@@ -78,38 +97,46 @@ export default function MessageInput() {
 
   return (
     <div className="flex gap-2 p-4 border-t bg-neutral-200">
-      <div className="flex-1 relative">
-        <Textarea
-          ref={textareaRef}
-          value={message}
-          onChange={handleInputChange}
-          onKeyDown={handleKeyPress}
-          placeholder={
-            !selectedChat
-              ? "Select a chat to start messaging"
-              : !socketConnected
-              ? "Connecting..."
-              : "Type a message..."
-          }
-          disabled={!selectedChat || !socketConnected}
-          rows={1}
-          spellCheck={true}
-          autoCapitalize="sentences"
-          autoCorrect="on"
-          inputMode="text"
-          enterKeyHint="send"
-          className={cn(
-            "min-h-[40px] max-h-[120px] resize-none bg-white transition-all duration-200",
-            "scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100",
-            "focus-visible:ring-2 focus-visible:ring-blue-500",
-          )}
-          style={{
-            lineHeight: "1.4",
-            fontFamily: "inherit",
-            overflow: "hidden",
-          }}
+      {(activeInput === "text" || activeInput === "") && (
+        <div className="flex-1 relative">
+          <Textarea
+            ref={textareaRef}
+            value={message}
+            onChange={handleInputChange}
+            onKeyDown={handleKeyPress}
+            placeholder={
+              !selectedChat
+                ? "Select a chat to start messaging"
+                : !socketConnected
+                ? "Connecting..."
+                : "Type a message..."
+            }
+            disabled={!selectedChat || !socketConnected}
+            rows={1}
+            spellCheck={true}
+            autoCapitalize="sentences"
+            autoCorrect="on"
+            inputMode="text"
+            enterKeyHint="send"
+            className={cn(
+              "min-h-[40px] max-h-[120px] resize-none bg-white transition-all duration-200",
+              "scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100",
+              "focus-visible:ring-2 focus-visible:ring-blue-500",
+            )}
+            style={{
+              lineHeight: "1.4",
+              fontFamily: "inherit",
+              overflow: "hidden",
+            }}
+          />
+        </div>
+      )}
+      {(activeInput === "voice" || activeInput === "") && (
+        <MicrophoneInput
+          onRecordingStart={handleRecordingStart}
+          onClear={handleRecordingClear}
         />
-      </div>
+      )}
       <Button onClick={handleSend} disabled={isDisabled} size="default">
         Send
       </Button>

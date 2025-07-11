@@ -4,7 +4,7 @@ const contentSchema = new Schema(
   {
     contentType: {
       type: String,
-      required: true,
+      default: "text/plain",
       enum: [
         "text/plain",
         "audio/wav",

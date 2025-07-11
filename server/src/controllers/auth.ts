@@ -1,5 +1,5 @@
 import User from "../model/user";
-import admin from "../lib/firebaseAdmin";
+import { admin } from "../lib/firebaseAdmin";
 import { NotFoundError } from "../middlewares/errorMiddleware";
 import UserSettings from "../model/userSettings";
 

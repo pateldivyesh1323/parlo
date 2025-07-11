@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import admin from "../lib/firebaseAdmin";
+import { admin } from "../lib/firebaseAdmin";
 import { Socket } from "socket.io";
 import User from "../model/user";
 
