@@ -1,20 +1,12 @@
 import { Schema, model, Types } from "mongoose";
+import { CONTENT_TYPES } from "../constants";
 
 const contentSchema = new Schema(
   {
     contentType: {
       type: String,
       default: "text/plain",
-      enum: [
-        "text/plain",
-        "audio/wav",
-        "audio/mpeg",
-        "image/jpeg",
-        "image/png",
-        "video/mp4",
-        "application/pdf",
-        "application/octet-stream",
-      ],
+      enum: Object.values(CONTENT_TYPES),
     },
     value: {
       type: String,

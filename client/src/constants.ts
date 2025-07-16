@@ -6,6 +6,18 @@ export const QUERY_KEYS = {
   },
 };
 
+// Simple string constants for content types
+export const CONTENT_TYPES = {
+  TEXT: "text/plain",
+  AUDIO: "audio/wav",
+  AUDIO_MP3: "audio/mpeg",
+  IMAGE_JPG: "image/jpeg",
+  IMAGE_PNG: "image/png",
+  VIDEO: "video/mp4",
+  PDF: "application/pdf",
+  OCTET_STREAM: "application/octet-stream",
+} as const;
+
 export const languages: Language[] = [
   { code: "af", name: "Afrikaans", nativeName: "Afrikaans" },
   { code: "am", name: "Amharic", nativeName: "አማርኛ" },

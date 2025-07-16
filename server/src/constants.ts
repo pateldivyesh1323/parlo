@@ -93,3 +93,14 @@ export const languages: Language[] = [
   { code: "zh", name: "Chinese", nativeName: "中文" },
   { code: "zu", name: "Zulu", nativeName: "isiZulu" },
 ];
+
+export const CONTENT_TYPES = {
+  TEXT: "text/plain",
+  AUDIO: "audio/wav",
+  AUDIO_MP3: "audio/mpeg",
+  IMAGE_JPG: "image/jpeg",
+  IMAGE_PNG: "image/png",
+  VIDEO: "video/mp4",
+  PDF: "application/pdf",
+  OCTET_STREAM: "application/octet-stream",
+} as const;

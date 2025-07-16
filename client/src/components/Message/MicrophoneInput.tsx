@@ -12,6 +12,8 @@ interface MicrophoneInputProps {
   disabled?: boolean;
   className?: string;
   onClear?: () => void;
+  audioBlob: Blob | null;
+  setAudioBlob: (audioBlob: Blob | null) => void;
 }
 
 export default function MicrophoneInput({
@@ -22,11 +24,12 @@ export default function MicrophoneInput({
   disabled = false,
   className,
   onClear,
+  audioBlob,
+  setAudioBlob,
 }: MicrophoneInputProps) {
   const [isRecording, setIsRecording] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
-  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [audioDuration, setAudioDuration] = useState(0);
@@ -141,7 +144,7 @@ export default function MicrophoneInput({
       setIsPlaying(false);
     }
     onClear?.();
-  }, [onClear]);
+  }, [onClear, setAudioBlob]);
 
   const requestMicrophoneAccess = useCallback(async () => {
     try {
@@ -247,6 +250,7 @@ export default function MicrophoneInput({
     onRecordingStart,
     onError,
     startTimer,
+    setAudioBlob,
   ]);
 
   const pauseRecording = useCallback(() => {

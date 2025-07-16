@@ -26,19 +26,10 @@ interface Message {
 
 interface Content {
   _id: string;
-  contentType: ContentType;
+  contentType: string;
   value: string;
   uploadedBy: User;
   metadata: Record<string, unknown>;
-}
-
-enum ContentType {
-  TEXT = "text/plain",
-  AUDIO = "audio/wav",
-  IMAGE = "image/jpeg",
-  VIDEO = "video/mp4",
-  PDF = "application/pdf",
-  OCTET_STREAM = "application/octet-stream",
 }
 
 type Language = {

@@ -10,6 +10,7 @@ import { useAuth } from "./AuthContext";
 import { getChatSocket, disconnectChatSocket } from "@/socket";
 import type { Socket } from "socket.io-client";
 import { apiClient } from "@/lib/apiClient";
+import { CONTENT_TYPES } from "@/constants";
 
 interface ChatContextType {
   chats: Chat[];
@@ -18,7 +19,7 @@ interface ChatContextType {
   setSelectedChat: (chat: Chat | null) => void;
   messages: Message[];
   socketConnected: boolean;
-  sendMessage: (message: string) => void;
+  sendMessage: (content: string | Blob, contentType: string) => void;
   typingUsers: {
     chatId: string;
     users: string[];
@@ -219,15 +220,56 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   }, [selectedChat?._id, socketConnected]);
 
   const sendMessage = useCallback(
-    (message: string) => {
+    (content: string | Blob, contentType: string) => {
       if (!socket || !socketConnected || !selectedChat) {
         console.warn("Cannot send message: socket not ready");
         return;
       }
-      socket.emit("send_message", {
-        chatId: selectedChat._id,
-        message,
-      });
+
+      switch (contentType) {
+        case CONTENT_TYPES.TEXT:
+          socket.emit("send_message", {
+            chatId: selectedChat._id,
+            content,
+            contentType,
+          });
+          break;
+        case CONTENT_TYPES.AUDIO:
+          socket.emit("send_message", {
+            chatId: selectedChat._id,
+            content,
+            contentType,
+          });
+          break;
+        case CONTENT_TYPES.IMAGE_JPG:
+          socket.emit("send_message", {
+            chatId: selectedChat._id,
+            content,
+            contentType,
+          });
+          break;
+        case CONTENT_TYPES.VIDEO:
+          socket.emit("send_message", {
+            chatId: selectedChat._id,
+            content,
+            contentType,
+          });
+          break;
+        case CONTENT_TYPES.PDF:
+          socket.emit("send_message", {
+            chatId: selectedChat._id,
+            content,
+            contentType,
+          });
+          break;
+        case CONTENT_TYPES.OCTET_STREAM:
+          socket.emit("send_message", {
+            chatId: selectedChat._id,
+            content,
+            contentType,
+          });
+          break;
+      }
     },
     [selectedChat, socketConnected],
   );

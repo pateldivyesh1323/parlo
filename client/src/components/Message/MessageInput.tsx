@@ -3,13 +3,10 @@ import { useChat } from "@/context/ChatContext";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { CONTENT_TYPES } from "@/constants";
 import MicrophoneInput from "./MicrophoneInput";
 
 export default function MessageInput() {
-  const [message, setMessage] = useState("");
-  const [activeInput, setActiveInput] = useState<"text" | "voice" | "">("");
-
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const {
     sendMessage,
     selectedChat,
@@ -17,13 +14,32 @@ export default function MessageInput() {
     startTyping,
     stopTyping,
   } = useChat();
+
+  const [message, setMessage] = useState<string>("");
+  const [activeInput, setActiveInput] = useState<string>("");
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleSend = () => {
-    if (!message.trim() || !selectedChat || !socketConnected) return;
+    if (!selectedChat || !socketConnected) return;
 
-    sendMessage(message.trim());
-    setMessage("");
+    switch (activeInput) {
+      case CONTENT_TYPES.TEXT:
+        if (!message.trim()) return;
+        sendMessage(message.trim(), CONTENT_TYPES.TEXT);
+        setMessage("");
+        break;
+      case CONTENT_TYPES.AUDIO:
+        if (!audioBlob) return;
+        sendMessage(audioBlob, CONTENT_TYPES.AUDIO);
+        setAudioBlob(null);
+        break;
+    }
+
+    setActiveInput("");
+
     stopTyping();
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
@@ -49,10 +65,6 @@ export default function MessageInput() {
     }
   };
 
-  useEffect(() => {
-    adjustTextareaHeight();
-  }, [message]);
-
   const debouncedStopTyping = useCallback(() => {
     stopTyping();
   }, [stopTyping]);
@@ -70,8 +82,12 @@ export default function MessageInput() {
   };
 
   const handleRecordingStart = () => {
-    setActiveInput("voice");
+    setActiveInput(CONTENT_TYPES.AUDIO);
   };
+
+  useEffect(() => {
+    adjustTextareaHeight();
+  }, [message]);
 
   const handleRecordingClear = () => {
     setActiveInput("");
@@ -79,8 +95,8 @@ export default function MessageInput() {
 
   useEffect(() => {
     if (message.length > 0) {
-      setActiveInput("text");
-    } else if (activeInput !== "voice") {
+      setActiveInput(CONTENT_TYPES.TEXT);
+    } else if (activeInput !== CONTENT_TYPES.AUDIO) {
       setActiveInput("");
     }
   }, [message, activeInput]);
@@ -93,11 +109,11 @@ export default function MessageInput() {
     };
   }, []);
 
-  const isDisabled = !selectedChat || !socketConnected || !message.trim();
+  const isDisabled = !selectedChat || !socketConnected || !activeInput;
 
   return (
     <div className="flex gap-2 p-4 border-t bg-neutral-200">
-      {(activeInput === "text" || activeInput === "") && (
+      {(activeInput === CONTENT_TYPES.TEXT || activeInput === "") && (
         <div className="flex-1 relative">
           <Textarea
             ref={textareaRef}
@@ -131,10 +147,12 @@ export default function MessageInput() {
           />
         </div>
       )}
-      {(activeInput === "voice" || activeInput === "") && (
+      {(activeInput === CONTENT_TYPES.AUDIO || activeInput === "") && (
         <MicrophoneInput
           onRecordingStart={handleRecordingStart}
           onClear={handleRecordingClear}
+          audioBlob={audioBlob}
+          setAudioBlob={setAudioBlob}
         />
       )}
       <Button onClick={handleSend} disabled={isDisabled} size="default">
