@@ -38,7 +38,7 @@ export default function setupChatNamespace(namespace: Namespace) {
     socket.on("send_message", async (data: any) => {
       try {
         const { chatId, content, contentType } = data;
-        console.log("Hello", chatId);
+
         const hasAccess = await hasUserAccess(firebaseId, chatId);
         if (!hasAccess) {
           socket.emit("error", "You do not have access to this chat");

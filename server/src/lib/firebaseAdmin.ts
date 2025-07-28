@@ -15,13 +15,24 @@ const uploadAudio = async (audio: Buffer, fileName: string) => {
   const bucket = storage.bucket();
   const file = bucket.file(`audio/${fileName}`);
 
+  const token = crypto.randomUUID();
+
   await file.save(audio, {
     metadata: {
       contentType: "audio/wav",
+      metadata: {
+        firebaseStorageDownloadTokens: token,
+      },
     },
   });
 
-  return file;
+  const [metadata] = await file.getMetadata();
+
+  return `https://firebasestorage.googleapis.com/v0/b/${
+    metadata.bucket
+  }/o/${encodeURIComponent(
+    metadata?.name as string | number,
+  )}?alt=media&token=${token}`;
 };
 
 export { admin, storage, uploadAudio };

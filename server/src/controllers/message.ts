@@ -5,10 +5,11 @@ import UserSettings from "../model/userSettings";
 import Chat from "../model/chat";
 import translateText from "../AI/text_translation";
 import { CONTENT_TYPES } from "../constants";
+import { uploadAudio } from "../lib/firebaseAdmin";
 
 const createMessage = async (
   chatId: string,
-  content: string | Blob,
+  content: string | Buffer,
   contentType: string,
   userId: string,
 ) => {
@@ -63,7 +64,20 @@ const createMessage = async (
         uploadedBy: userId,
       });
       break;
+
     case CONTENT_TYPES.AUDIO:
+      const uuid = crypto.randomUUID().split("-")[0];
+
+      const audioUrl = await uploadAudio(
+        content as Buffer,
+        `${chatId}-${userId}-${uuid}.wav`,
+      );
+
+      createdContent = await Content.create({
+        contentType,
+        value: audioUrl,
+        uploadedBy: userId,
+      });
       break;
   }
 
