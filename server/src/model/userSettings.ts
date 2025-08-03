@@ -10,6 +10,10 @@ const userSettingsSchema = new Schema({
     type: String,
     default: "en",
   },
+  translateByDefault: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const UserSettings = model("UserSettings", userSettingsSchema);

@@ -1,21 +1,25 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
-import {
-  useGetUserPreferences,
-  useUpdatePersonalInfo,
-  useUpdatePreferences,
-} from "@/hooks/useAuth";
+import { useUpdatePersonalInfo, useUpdatePreferences } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import LoadingSpinner from "@/components/Common/LoadingSpinner";
 import { languages } from "@/constants";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 
 export default function Settings() {
-  const { user } = useAuth();
-  const { data: userPreferences, isLoading: preferencesLoading } =
-    useGetUserPreferences();
+  const { user, userPreferences, loading } = useAuth();
   const updatePersonalInfoMutation = useUpdatePersonalInfo();
   const updatePreferencesMutation = useUpdatePreferences();
 
@@ -26,9 +30,8 @@ export default function Settings() {
 
   const [preferences, setPreferences] = useState({
     translationLanguage: "en",
+    translateByDefault: false,
   });
-
-  const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -43,6 +46,7 @@ export default function Settings() {
     if (userPreferences) {
       setPreferences({
         translationLanguage: userPreferences.translationLanguage || "en",
+        translateByDefault: userPreferences.translateByDefault,
       });
     }
   }, [userPreferences]);
@@ -58,10 +62,7 @@ export default function Settings() {
 
   const handlePreferencesSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    updatePreferencesMutation.mutate({
-      translationLanguage: preferences.translationLanguage,
-    });
+    updatePreferencesMutation.mutate(preferences);
   };
 
   const getLanguageName = (code: string) => {
@@ -69,7 +70,7 @@ export default function Settings() {
     return language ? `${language.name} (${language.nativeName})` : code;
   };
 
-  if (!user || preferencesLoading) {
+  if (!user || loading) {
     return (
       <div className="flex items-center justify-center h-64">
         <LoadingSpinner />
@@ -136,43 +137,53 @@ export default function Settings() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handlePreferencesSubmit} className="space-y-4">
-            <div>
-              <Label htmlFor="language">Translation Language</Label>
-              <div className="relative">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full justify-between"
-                  onClick={() => setShowLanguageDropdown(!showLanguageDropdown)}
-                >
+            <label
+              className="text-sm text-muted-foreground"
+              id="language-label"
+            >
+              Select your preferred language for translation features.
+            </label>
+            <Select
+              defaultValue={preferences.translationLanguage}
+              onValueChange={(code) => {
+                setPreferences((prev) => ({
+                  ...prev,
+                  translationLanguage: code,
+                }));
+              }}
+              aria-labelledby="language-label"
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select Language">
                   {getLanguageName(preferences.translationLanguage)}
-                  <span className="ml-2">▼</span>
-                </Button>
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Translation Language</SelectLabel>
+                  {languages.map((language) => (
+                    <SelectItem key={language.code} value={language.code}>
+                      {getLanguageName(language.code)}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
 
-                {showLanguageDropdown && (
-                  <div className="absolute z-10 w-full mt-1 bg-background border rounded-md shadow-lg max-h-60 overflow-auto">
-                    {languages.map((language) => (
-                      <button
-                        key={language.code}
-                        type="button"
-                        className="w-full px-3 py-2 text-left hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
-                        onClick={() => {
-                          setPreferences((prev) => ({
-                            ...prev,
-                            translationLanguage: language.code,
-                          }));
-                          setShowLanguageDropdown(false);
-                        }}
-                      >
-                        {language.name} ({language.nativeName})
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <p className="text-sm text-muted-foreground mt-1">
-                Select your preferred language for translation features.
-              </p>
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="translateByDefault"
+                checked={preferences.translateByDefault}
+                onCheckedChange={(checked) =>
+                  setPreferences((prev) => ({
+                    ...prev,
+                    translateByDefault: checked,
+                  }))
+                }
+              />
+              <Label htmlFor="translateByDefault">
+                Translate language by default
+              </Label>
             </div>
 
             <Button

@@ -10,4 +10,5 @@ interface UserSettings {
   _id: string;
   userId: string;
   translationLanguage: string;
+  translateByDefault: boolean;
 }

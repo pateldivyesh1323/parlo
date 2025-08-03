@@ -193,8 +193,10 @@ const receiverBox = (
 };
 
 export default function Message({ message }: { message: Message }) {
-  const { user } = useAuth();
-  const [showTranslated, setShowTranslated] = useState(false);
+  const { user, userPreferences } = useAuth();
+  const [showTranslated, setShowTranslated] = useState(
+    userPreferences?.translateByDefault || false,
+  );
 
   return (
     <div key={message._id} className="flex flex-col space-y-1">

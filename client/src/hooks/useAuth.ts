@@ -17,7 +17,7 @@ export const useGetUser = (enabled: boolean = true) => {
   });
 };
 
-export const useGetUserPreferences = () => {
+export const useGetUserPreferences = (enabled: boolean = true) => {
   return useQuery({
     queryKey: [QUERY_KEYS.USER.GET_USER_PREFERENCES],
     queryFn: async () => {
@@ -26,6 +26,7 @@ export const useGetUserPreferences = () => {
       );
       return data.data;
     },
+    enabled,
   });
 };
 
@@ -51,14 +52,11 @@ export const useUpdatePersonalInfo = () => {
 
 export const useUpdatePreferences = () => {
   return useMutation({
-    mutationFn: async ({
-      translationLanguage,
-    }: {
+    mutationFn: async (data: {
       translationLanguage: string;
+      translateByDefault: boolean;
     }) => {
-      const res = await apiClient.post("/api/auth/update-preferences", {
-        translationLanguage,
-      });
+      const res = await apiClient.post("/api/auth/update-preferences", data);
       return res.data;
     },
     onSuccess: () => {

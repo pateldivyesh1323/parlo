@@ -57,7 +57,7 @@ const updatePreferences = async ({
   data,
 }: {
   userId: string;
-  data: { translationLanguage: string };
+  data: { translationLanguage: string; translateByDefault: boolean };
 }) => {
   const userSettings = await UserSettings.findOneAndUpdate({ userId }, data, {
     new: true,
