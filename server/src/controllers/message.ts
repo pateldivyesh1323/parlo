@@ -6,13 +6,19 @@ import Chat from "../model/chat";
 import translateText from "../AI/text_translation";
 import { CONTENT_TYPES } from "../constants";
 import { processAndUploadAudio } from "../lib/firebaseAdmin";
+import { speech_to_speech } from "../AI/speech_translation";
 
-const createMessage = async (
-  chatId: string,
-  content: string | Buffer,
-  contentType: string,
-  userId: string,
-) => {
+const createMessage = async ({
+  chatId,
+  content,
+  contentType,
+  senderId,
+}: {
+  chatId: string;
+  content: string | Buffer;
+  contentType: string;
+  senderId: string;
+}) => {
   const chat = await Chat.findById(chatId)
     .select("users")
     .populate({ path: "users", select: "_id" })
@@ -24,9 +30,9 @@ const createMessage = async (
   switch (contentType) {
     case CONTENT_TYPES.TEXT:
       // Translate the message if the user has a translation language set
-      const translationPromises =
+      const textTranslationPromises =
         chat?.users
-          .filter((user) => user._id.toString() !== userId)
+          .filter((user) => user._id.toString() !== senderId)
           .map(async (userId) => {
             const userSettings = await UserSettings.findOne({ userId })
               .select("translationLanguage")
@@ -41,7 +47,7 @@ const createMessage = async (
                 userSettings?.translationLanguage,
               );
               const translatedContent = await Content.create({
-                contentType: "text/plain",
+                contentType: CONTENT_TYPES.TEXT,
                 value: translatedText,
                 uploadedBy: userId,
               });
@@ -54,14 +60,14 @@ const createMessage = async (
             return null;
           }) || [];
 
-      translatedContents = (await Promise.all(translationPromises)).filter(
+      translatedContents = (await Promise.all(textTranslationPromises)).filter(
         Boolean,
       );
 
       createdContent = await Content.create({
         contentType,
         value: content,
-        uploadedBy: userId,
+        uploadedBy: senderId,
       });
       break;
 
@@ -70,20 +76,66 @@ const createMessage = async (
 
       const audioUrl = await processAndUploadAudio(
         content as Buffer,
-        `${chatId}-${userId}-${uuid}.wav`,
+        `${chatId}-${senderId}-${uuid}.wav`,
       );
 
       createdContent = await Content.create({
         contentType,
         value: audioUrl,
-        uploadedBy: userId,
+        uploadedBy: senderId,
       });
+
+      const audioTranslationPromises =
+        chat?.users
+          .filter((user) => {
+            return user._id.toString() !== senderId;
+          })
+          .map(async (user) => {
+            const userId = user._id.toString();
+            const userSettings = await UserSettings.findOne({ userId })
+              .select("translationLanguage")
+              .lean();
+
+            if (
+              userSettings?.translationLanguage &&
+              userSettings?.translationLanguage !== "en"
+            ) {
+              const { translatedAudio } = await speech_to_speech({
+                audio: content as Buffer,
+                targetLanguage: userSettings?.translationLanguage,
+                ttsLangCode: userSettings?.translationLanguage,
+              });
+
+              const audioUrl = await processAndUploadAudio(
+                translatedAudio,
+                `${chatId}-${userId}-${uuid}.wav`,
+              );
+
+              const translatedContent = await Content.create({
+                contentType: CONTENT_TYPES.AUDIO,
+                value: audioUrl,
+                uploadedBy: userId,
+              });
+
+              return {
+                user: userId,
+                language: userSettings?.translationLanguage,
+                content: translatedContent._id,
+              };
+            }
+            return null;
+          }) || [];
+
+      translatedContents = (await Promise.all(audioTranslationPromises)).filter(
+        Boolean,
+      );
+
       break;
   }
 
   const newMessage = await Message.create({
     chat: chatId,
-    sender: userId,
+    sender: senderId,
     originalContent: createdContent?._id,
     translatedContents,
   });

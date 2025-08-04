@@ -2,15 +2,20 @@ import { MessageSquare } from "lucide-react";
 import ChatItem from "./ChatItem";
 import { useChat } from "@/context/ChatContext";
 import { useEffect } from "react";
+import { useSearchParams } from "react-router";
 
 const ChatList = () => {
   const { chats, setSelectedChat, selectedChat } = useChat();
+  const [searchParams] = useSearchParams();
 
   useEffect(() => {
     if (chats && chats.length > 0 && !selectedChat) {
-      setSelectedChat(chats[0]);
+      setSelectedChat(
+        chats.find((chat) => chat._id === searchParams.get("selected_chat")) ||
+          chats[0],
+      );
     }
-  }, [chats, setSelectedChat, selectedChat]);
+  }, [chats, setSelectedChat, selectedChat, searchParams]);
 
   return (
     <div className="flex-1 overflow-y-auto">

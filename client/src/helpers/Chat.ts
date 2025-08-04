@@ -14,19 +14,13 @@ const getNormalChatDetails = (
   const chatPhotoURL = chatDetails?.photoURL;
   const latestMessage = chat?.latestMessage;
 
-  const latestMessageContent =
-    latestMessage?.originalContent.value &&
-    latestMessage?.originalContent.value.length > 20
-      ? latestMessage?.originalContent.value.slice(0, 20) + "..."
-      : latestMessage?.originalContent.value || "No messages yet";
-
   const isSelected = selectedChat?._id === chat?._id;
 
   return {
     chatTitle,
     chatPhotoURL,
-    latestMessageContent,
     isSelected,
+    latestMessage,
   };
 };
 

@@ -109,6 +109,12 @@ export default function MessageInput() {
     };
   }, []);
 
+  useEffect(() => {
+    setMessage("");
+    setAudioBlob(null);
+    setActiveInput(CONTENT_TYPES.TEXT);
+  }, [selectedChat]);
+
   const isDisabled = !selectedChat || !socketConnected || !activeInput;
 
   return (

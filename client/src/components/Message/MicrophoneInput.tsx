@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Mic, MicOff, Square, Play, Pause, Trash2 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
+import { toast } from "sonner";
 
 interface MicrophoneInputProps {
   onRecordingComplete?: (audioBlob: Blob) => void;
@@ -281,11 +282,35 @@ export default function MicrophoneInput({
   }, [onRecordingStop, stopTimer, recordingTime]);
 
   const handleMicClick = useCallback(() => {
+    if (!hasPermission) {
+      toast(
+        <div
+          className={cn(
+            "flex w-full items-center justify-between gap-2 rounded-md",
+          )}
+        >
+          <MicOff className="size-4 text-destructive" />
+          <span className="text-xs text-destructive">
+            Microphone access denied
+          </span>
+          <Button variant="outline" size="sm" onClick={requestMicrophoneAccess}>
+            Grant Access
+          </Button>
+        </div>,
+      );
+      return;
+    }
     if (audioBlob) {
       clearRecording();
     }
     startRecording();
-  }, [audioBlob, clearRecording, startRecording]);
+  }, [
+    audioBlob,
+    clearRecording,
+    startRecording,
+    hasPermission,
+    requestMicrophoneAccess,
+  ]);
 
   const togglePlayPause = useCallback(() => {
     if (!audioRef.current) return;
@@ -327,30 +352,6 @@ export default function MicrophoneInput({
       stopTimer();
     };
   }, [stopTimer]);
-
-  if (hasPermission === false) {
-    return (
-      <div
-        className={cn(
-          "flex items-center gap-2 p-4 border border-destructive/20 rounded-md bg-destructive/5",
-          className,
-        )}
-      >
-        <MicOff className="size-4 text-destructive" />
-        <span className="text-sm text-destructive">
-          Microphone access denied
-        </span>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={requestMicrophoneAccess}
-          disabled={disabled}
-        >
-          Request Access
-        </Button>
-      </div>
-    );
-  }
 
   return (
     <div className={cn("flex items-center gap-2 border-t", className)}>

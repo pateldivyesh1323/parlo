@@ -12,8 +12,10 @@ export default function SidebarWrapper({
   const [open, setOpen] = useState(searchParams.get("sidebar") === "true");
 
   useEffect(() => {
-    setSearchParams({ sidebar: open ? "true" : "false" });
-  }, [open, setSearchParams]);
+    const params = new URLSearchParams(searchParams);
+    params.set("sidebar", open ? "true" : "false");
+    setSearchParams(params);
+  }, [open, searchParams, setSearchParams]);
 
   return (
     <SidebarProvider open={open} onOpenChange={setOpen}>

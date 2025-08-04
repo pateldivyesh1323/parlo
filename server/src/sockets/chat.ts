@@ -45,12 +45,12 @@ export default function setupChatNamespace(namespace: Namespace) {
           return;
         }
 
-        const newMessage = await createMessage(
+        const newMessage = await createMessage({
           chatId,
           content,
           contentType,
-          userId,
-        );
+          senderId: userId,
+        });
 
         namespace.to(chatId).emit("new_message", newMessage);
       } catch (error) {

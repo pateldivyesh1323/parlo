@@ -6,18 +6,23 @@ import { CONTENT_TYPES } from "@/constants";
 import { Play, Pause } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
+import { LoadingSpinner } from "../Common";
 
 const AudioPlayer = ({ url }: { url: string }) => {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [loading, setLoading] = useState(false);
 
   useLayoutEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
-
-    const setMeta = () => setDuration(audio.duration);
+    setLoading(true);
+    const setMeta = () => {
+      setDuration(audio.duration);
+      setLoading(false);
+    };
     const setTime = () => setCurrentTime(audio.currentTime);
     const resetPlay = () => setIsPlaying(false);
 
@@ -25,7 +30,10 @@ const AudioPlayer = ({ url }: { url: string }) => {
     audio.addEventListener("timeupdate", setTime);
     audio.addEventListener("ended", resetPlay);
 
-    if (audio.readyState >= 1) setDuration(audio.duration);
+    if (audio.readyState >= 1) {
+      setDuration(audio.duration);
+      setLoading(false);
+    }
 
     return () => {
       audio.removeEventListener("loadedmetadata", setMeta);
@@ -70,8 +78,11 @@ const AudioPlayer = ({ url }: { url: string }) => {
         onClick={togglePlayPause}
         className="h-8 w-8 rounded-full"
         aria-label={isPlaying ? "Pause" : "Play"}
+        disabled={loading}
       >
-        {isPlaying ? (
+        {loading ? (
+          <LoadingSpinner size="sm" />
+        ) : isPlaying ? (
           <Pause className="h-4 w-4" />
         ) : (
           <Play className="h-4 w-4" />
@@ -85,6 +96,7 @@ const AudioPlayer = ({ url }: { url: string }) => {
           onValueChange={handleSeek}
           className="w-[150px] !bg-gray-400"
           aria-label="Seek audio position"
+          disabled={loading}
         />
       </div>
       <div className="flex items-center gap-0.5 text-xs font-mono tabular-nums">
@@ -162,9 +174,10 @@ const receiverBox = (
             message.originalContent.contentType !== CONTENT_TYPES.AUDIO && (
               <p className="text-sm whitespace-pre-wrap">{displayContent}</p>
             )}
-          {message.originalContent.contentType === CONTENT_TYPES.AUDIO && (
-            <AudioPlayer url={message.originalContent.value} />
-          )}
+          {displayContent &&
+            message.originalContent.contentType === CONTENT_TYPES.AUDIO && (
+              <AudioPlayer url={displayContent} />
+            )}
           <div className="flex items-center gap-2">
             <span className="text-tiny text-muted-foreground whitespace-nowrap">
               {new Date(message?.createdAt).toLocaleTimeString("en-US", {

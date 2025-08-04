@@ -1,11 +1,11 @@
 import fs from "fs";
-import fsPromises from "fs/promises";
 import path from "path";
 import { TextToSpeechClient } from "@google-cloud/text-to-speech";
 import Groq from "groq-sdk";
 import environments from "../environments";
 import { TranslationServiceClient } from "@google-cloud/translate";
 import { performance } from "perf_hooks";
+import os from "os";
 
 const ttsClient = new TextToSpeechClient();
 const groq = new Groq({
@@ -15,25 +15,24 @@ const translationClient = new TranslationServiceClient();
 const projectId = environments.PROJECT_ID;
 const location = environments.LOCATION;
 
-const speech_to_text = async ({ audio }: { audio: string }) => {
-  if (!fs.existsSync(audio)) {
-    throw new Error("Audio file does not exist");
-  }
-
-  const file = await fsPromises.readFile(audio);
-  if (file.length === 0) {
-    throw new Error("Audio file is empty");
-  }
-
+const speech_to_text = async ({ audio }: { audio: Buffer }) => {
   try {
+    const tempId = crypto.randomUUID();
+    const tempFilePath = path.join(os.tmpdir(), `${tempId}.wav`);
+    await fs.promises.writeFile(tempFilePath, audio);
+
     const translation = await groq.audio.translations.create({
-      file: fs.createReadStream(audio),
+      file: fs.createReadStream(tempFilePath),
       model: "whisper-large-v3",
     });
 
     if (!translation.text || translation.text.trim().length === 0) {
       throw new Error("No text was translated from the audio file");
     }
+
+    fs.promises.unlink(tempFilePath).catch((err) => {
+      console.error("Failed to delete temp file:", err);
+    });
 
     return { text: translation.text };
   } catch (error) {
@@ -43,16 +42,11 @@ const speech_to_text = async ({ audio }: { audio: string }) => {
 
 const text_to_speech = async ({
   text,
-  speechFilePath,
   languageCode = "gu-IN",
 }: {
   text: string;
-  speechFilePath: string;
   languageCode?: string;
 }) => {
-  const dir = path.dirname(speechFilePath);
-  await fsPromises.mkdir(dir, { recursive: true });
-
   const [response] = await ttsClient.synthesizeSpeech({
     input: { text },
     voice: {
@@ -64,7 +58,7 @@ const text_to_speech = async ({
     },
   });
 
-  await fsPromises.writeFile(speechFilePath, response.audioContent as Buffer);
+  return response.audioContent as Buffer;
 };
 
 const translateText = async (
@@ -93,39 +87,26 @@ const translateText = async (
 
 const speech_to_speech = async ({
   audio,
-  speechFilePath,
   targetLanguage = "gu-IN",
   ttsLangCode = "gu-IN",
 }: {
-  audio: string;
-  speechFilePath: string;
+  audio: Buffer;
   targetLanguage?: string;
   ttsLangCode?: string;
 }) => {
   try {
+    console.log("Target language:", targetLanguage);
+    console.log("TTS Lang code:", ttsLangCode);
     const startTime = performance.now();
 
-    const startTime1 = performance.now();
     const { text: englishText } = await speech_to_text({ audio });
-    const endTime1 = performance.now();
-    const duration1 = endTime1 - startTime1;
-    console.log(`Time taken to translate text: ${duration1} milliseconds`);
 
-    const startTime2 = performance.now();
     const translatedText = await translateText(englishText, targetLanguage);
-    const endTime2 = performance.now();
-    const duration2 = endTime2 - startTime2;
-    console.log(`Time taken to translate text: ${duration2} milliseconds`);
 
-    const startTime3 = performance.now();
-    await text_to_speech({
+    const translatedAudio = await text_to_speech({
       text: translatedText,
-      speechFilePath,
       languageCode: ttsLangCode,
     });
-    const endTime3 = performance.now();
-    const duration3 = endTime3 - startTime3;
-    console.log(`Time taken to translate text: ${duration3} milliseconds`);
 
     const endTime = performance.now();
     const duration = endTime - startTime;
@@ -135,6 +116,7 @@ const speech_to_speech = async ({
       translatedText: translatedText,
       success: true,
       duration: duration,
+      translatedAudio,
     };
   } catch (error) {
     throw error;
