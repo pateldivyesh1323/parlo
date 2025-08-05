@@ -7,15 +7,18 @@ import { QUERY_KEYS } from "@/constants";
 export const useCreateChat = () => {
   return useMutation({
     mutationFn: async ({
-      userEmails,
+      participantEmails,
       name,
     }: {
-      userEmails: string[];
+      participantEmails: string[];
       name?: string;
     }) => {
       const isGroupChat = !!name;
-      const chatData = { name, isGroupChat, userEmails };
-      const res = await apiClient.post("/api/chat/create", chatData);
+      const res = await apiClient.post("/api/chat/create", {
+        name,
+        isGroupChat,
+        participantEmails,
+      });
       return res.data;
     },
     onSuccess: () => {
@@ -34,6 +37,24 @@ export const useGetAllChats = () => {
     queryFn: async () => {
       const res = await apiClient.get("/api/chat/get-all");
       return res.data.data as Chat[];
+    },
+  });
+};
+
+export const useCreateChatFromQR = () => {
+  return useMutation({
+    mutationFn: async ({ participantId }: { participantId: string }) => {
+      const res = await apiClient.post("/api/chat/create-chat-from-qr", {
+        participantId,
+      });
+      return res.data;
+    },
+    onSuccess: () => {
+      toast.success("Chat created successfully");
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.CHATS] });
+    },
+    onError: () => {
+      toast.error("Failed to create chat");
     },
   });
 };

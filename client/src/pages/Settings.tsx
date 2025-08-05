@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import QRCode from "react-qr-code";
 
 export default function Settings() {
   const { user, userPreferences, loading } = useAuth();
@@ -81,6 +82,21 @@ export default function Settings() {
   return (
     <div className="flex flex-col gap-6 max-w-2xl mx-auto p-6">
       <h1 className="text-2xl font-bold">Settings</h1>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-center">
+            Share QR Code to quickly add you to a chat
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <QRCode
+            value={`type=user&id=${user._id}`}
+            className="mx-auto h-24"
+            size={256}
+          />
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

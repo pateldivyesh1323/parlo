@@ -56,7 +56,7 @@ export function CreateChatDialog({
 
     if (isValidSubmission) {
       createChat({
-        userEmails: validEmails,
+        participantEmails: validEmails,
         name: isGroupChat ? newChatName.trim() : undefined,
       });
       setNewChatName("");

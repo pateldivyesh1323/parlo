@@ -4,12 +4,12 @@ import { BadRequestError } from "../middlewares/errorMiddleware";
 
 const createChat = async ({
   userId,
-  userEmails,
+  participantEmails,
   name,
   isGroupChat,
 }: {
   userId: string;
-  userEmails: string[];
+  participantEmails: string[];
   name: string;
   isGroupChat: boolean;
 }) => {
@@ -19,7 +19,9 @@ const createChat = async ({
   }
 
   // Check for duplicate participants
-  const participantsSet = new Set(userEmails.map((email) => email.trim()));
+  const participantsSet = new Set(
+    participantEmails.map((email) => email.trim()),
+  );
   participantsSet.add(user.email);
 
   // Check if all participants exist
