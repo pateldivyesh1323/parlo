@@ -27,6 +27,7 @@ interface ChatContextType {
   startTyping: () => void;
   stopTyping: () => void;
   reconnectSocket: () => void;
+  refetchChats: () => void;
 }
 
 const ChatContext = createContext<ChatContextType>({
@@ -41,6 +42,7 @@ const ChatContext = createContext<ChatContextType>({
   startTyping: () => {},
   stopTyping: () => {},
   reconnectSocket: () => {},
+  refetchChats: () => {},
 });
 
 let socket: Socket | null = null;
@@ -304,6 +306,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         startTyping,
         stopTyping,
         reconnectSocket,
+        refetchChats: fetchChats,
       }}
     >
       {children}

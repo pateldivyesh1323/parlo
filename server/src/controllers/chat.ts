@@ -63,6 +63,7 @@ const createChat = async ({
 
     const existingChat = await Chat.findOne({
       users: { $all: participants.map((participant) => participant._id) },
+      isGroupChat: false,
     });
 
     if (existingChat) {

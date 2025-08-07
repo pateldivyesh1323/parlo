@@ -91,7 +91,10 @@ export default function Settings() {
         </CardHeader>
         <CardContent>
           <QRCode
-            value={`type=user&id=${user._id}`}
+            value={JSON.stringify({
+              type: "user",
+              id: user._id,
+            })}
             className="mx-auto h-24"
             size={256}
           />

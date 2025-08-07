@@ -13,7 +13,6 @@ export function QRScannerForCreateChat({
   const [isScanning, setIsScanning] = useState(false);
 
   const handleScan = (result: IDetectedBarcode[]) => {
-    console.log("QR Scanned:", result);
     onScan?.(result);
     setIsScanning(false);
   };
@@ -47,7 +46,6 @@ export function QRScannerForCreateChat({
               components={{
                 torch: true,
               }}
-              styles={{}}
             />
           </div>
         </div>

@@ -3,8 +3,10 @@ import { apiClient } from "@/lib/apiClient";
 import { toast } from "sonner";
 import { queryClient } from "@/lib/apiClient";
 import { QUERY_KEYS } from "@/constants";
+import { useChat } from "@/context/ChatContext";
 
 export const useCreateChat = () => {
+  const { refetchChats } = useChat();
   return useMutation({
     mutationFn: async ({
       participantEmails,
@@ -21,9 +23,10 @@ export const useCreateChat = () => {
       });
       return res.data;
     },
-    onSuccess: () => {
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.CHATS] });
+      refetchChats();
       toast.success("Chat created successfully");
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.CHATS] });
     },
     onError: () => {
       toast.error("Failed to create chat");
@@ -42,6 +45,7 @@ export const useGetAllChats = () => {
 };
 
 export const useCreateChatFromQR = () => {
+  const { refetchChats } = useChat();
   return useMutation({
     mutationFn: async ({ participantId }: { participantId: string }) => {
       const res = await apiClient.post("/api/chat/create-chat-from-qr", {
@@ -49,9 +53,10 @@ export const useCreateChatFromQR = () => {
       });
       return res.data;
     },
-    onSuccess: () => {
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.CHATS] });
+      refetchChats();
       toast.success("Chat created successfully");
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.CHATS] });
     },
     onError: () => {
       toast.error("Failed to create chat");
