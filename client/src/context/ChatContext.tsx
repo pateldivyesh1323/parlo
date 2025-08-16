@@ -209,8 +209,13 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       });
     };
 
+    const handlePresence = (data: { userId: string; status: string }) => {
+      console.log("🔔 [CHAT] Presence message:", data);
+    };
+
     socket.on("new_message", handleNewMessage);
     socket.on("typing", handleTyping);
+    socket.on("presence", handlePresence);
 
     loadMessages();
 
@@ -218,6 +223,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       socket?.emit("leave_chat", chatId);
       socket?.off("new_message", handleNewMessage);
       socket?.off("typing", handleTyping);
+      socket?.off("presence", handlePresence);
     };
   }, [selectedChat?._id, socketConnected]);
 

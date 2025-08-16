@@ -1,7 +1,12 @@
 import { Namespace, Socket } from "socket.io";
 import { socketAuthMiddleware } from "../middlewares/authMiddleware";
-import { getAllChatIds, hasUserAccess } from "../controllers/chat";
+import {
+  getAllChatIds,
+  hasUserAccess,
+  notifyContacts,
+} from "../controllers/chat";
 import { createMessage } from "../controllers/message";
+import { redisClient, subClient } from "../lib/redis";
 
 export default function setupChatNamespace(namespace: Namespace) {
   namespace.use(socketAuthMiddleware);
@@ -9,10 +14,20 @@ export default function setupChatNamespace(namespace: Namespace) {
   namespace.on("connection", async (socket: Socket) => {
     const firebaseId = socket.data.firebaseId;
     const userId = socket.data.user_id;
+
+    // Update the online status (Also handled in the disconnect event)
     console.log("🔌 [CHAT] Client connected:", firebaseId);
+    redisClient.set(`presence:${userId}`, "online", {
+      EX: 60 * 60 * 24,
+    });
+    // Also notify the contacts - We are using redis pub/sub to horizontally scale the application
+    redisClient.publish(
+      "presence",
+      JSON.stringify({ userId, status: "online" }),
+    );
 
-    const userChats = await getAllChatIds(firebaseId);
-
+    socket.join(userId);
+    const userChats = await getAllChatIds(userId);
     userChats.forEach((chatId) => {
       socket.join(chatId.toString());
     });
@@ -79,7 +94,20 @@ export default function setupChatNamespace(namespace: Namespace) {
     });
 
     socket.on("disconnect", () => {
-      console.log("❌ [CHAT] Client disconnected:", firebaseId);
+      console.log("⛓️‍💥 [CHAT] Client disconnected:", firebaseId);
+
+      // Update the online status
+      redisClient.del(`presence:${userId}`);
+      redisClient.publish(
+        "presence",
+        JSON.stringify({ userId, status: "offline" }),
+      );
     });
   });
 }
+
+// Handling subscription to the presence channel
+subClient.subscribe("presence", (message) => {
+  const { userId, status } = JSON.parse(message.toString());
+  notifyContacts({ userId, status });
+});

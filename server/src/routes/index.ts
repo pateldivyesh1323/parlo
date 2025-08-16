@@ -12,7 +12,9 @@ const apiLogger = (req: Request, res: Response, next: NextFunction) => {
   res.on("finish", () => {
     const duration = performance.now() - start;
     console.log(
-      `${req.method} ${req.originalUrl} ${res.statusCode} - ${duration}ms`,
+      `${req.method} ${req.originalUrl} ${res.statusCode} - ${duration.toFixed(
+        2,
+      )} ms`,
     );
   });
 
@@ -35,7 +37,6 @@ export = (app: express.Application) => {
   // Routes
 
   app.get("/", (_req, res) => {
-    console.log("GOTCHA");
     res.send({ message: "Parlo backend is live!" });
   });
 

@@ -52,7 +52,7 @@ router.post("/create-chat-from-qr", authMiddleware, async (req, res, next) => {
 
 router.get("/get-all", authMiddleware, async (req, res, next) => {
   try {
-    const userId = req.headers["firebase-id"];
+    const userId = req.headers["user-id"];
     const chats = await getAllChats(userId as string);
     AppResponse(res, 200, "Chats fetched successfully", chats);
   } catch (error) {

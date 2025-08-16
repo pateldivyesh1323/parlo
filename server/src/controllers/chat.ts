@@ -1,6 +1,7 @@
 import Chat from "../model/chat";
 import User from "../model/user";
 import { BadRequestError } from "../middlewares/errorMiddleware";
+import { chatNamespace } from "../sockets";
 
 const createChat = async ({
   userId,
@@ -80,13 +81,13 @@ const createChat = async ({
   return chat;
 };
 
-const getAllChats = async (userId: string) => {
-  const user = await User.findOne({ firebaseId: userId }).select("_id").lean();
+const getAllChats = async (userId: string, filter: any = {}) => {
+  const user = await User.findOne({ _id: userId }).select("_id").lean();
   if (!user) {
     throw new BadRequestError("User not found");
   }
 
-  const chats = await Chat.find({ users: { $in: [user._id] } })
+  const chats = await Chat.find({ users: { $in: [user._id] }, ...filter })
     .populate({
       path: "latestMessage",
       populate: { path: "originalContent" },
@@ -96,7 +97,7 @@ const getAllChats = async (userId: string) => {
 };
 
 const getAllChatIds = async (userId: string) => {
-  const user = await User.findOne({ firebaseId: userId });
+  const user = await User.findOne({ _id: userId });
   if (!user) {
     throw new BadRequestError("User not found");
   }
@@ -117,4 +118,37 @@ const hasUserAccess = async (firebaseId: string, chatId: string) => {
   return !!chat;
 };
 
-export { createChat, getAllChats, getAllChatIds, hasUserAccess };
+const notifyContacts = async ({
+  userId,
+  status,
+}: {
+  userId: string;
+  status: string;
+}) => {
+  try {
+    const chats = await getAllChats(userId, { isGroupChat: false });
+
+    const contacts = chats
+      .map((chat) =>
+        chat.users.filter((user) => user._id.toString() !== userId),
+      )
+      .flat();
+
+    contacts.forEach((contact) => {
+      chatNamespace.to(contact._id.toString()).emit("presence", {
+        userId,
+        status,
+      });
+    });
+  } catch (error) {
+    console.error("Error notifying contacts:", error);
+  }
+};
+
+export {
+  createChat,
+  getAllChats,
+  getAllChatIds,
+  hasUserAccess,
+  notifyContacts,
+};
