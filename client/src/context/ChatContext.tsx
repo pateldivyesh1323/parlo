@@ -28,6 +28,7 @@ interface ChatContextType {
   stopTyping: () => void;
   reconnectSocket: () => void;
   refetchChats: () => void;
+  onlineUsers: string[];
 }
 
 const ChatContext = createContext<ChatContextType>({
@@ -43,6 +44,7 @@ const ChatContext = createContext<ChatContextType>({
   stopTyping: () => {},
   reconnectSocket: () => {},
   refetchChats: () => {},
+  onlineUsers: [],
 });
 
 let socket: Socket | null = null;
@@ -60,6 +62,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       users: string[];
     }[]
   >([]);
+  const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
 
   const fetchChats = useCallback(async () => {
     if (!user) return;
@@ -68,6 +71,16 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       setChats(data.data);
     } catch (error) {
       console.error("Failed to fetch chats:", error);
+    }
+  }, [user]);
+
+  const fetchOnlineUsers = useCallback(async () => {
+    if (!user) return;
+    try {
+      const { data } = await apiClient.get(`/api/chat/get-all-online-users`);
+      setOnlineUsers(data.data);
+    } catch (error) {
+      console.error("Failed to fetch online users:", error);
     }
   }, [user]);
 
@@ -121,6 +134,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (user) {
       fetchChats();
+      fetchOnlineUsers();
       connectSocket();
     } else {
       if (socket) {
@@ -143,7 +157,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         setSocketConnected(false);
       }
     };
-  }, [user, fetchChats, connectSocket]);
+  }, [user, fetchChats, fetchOnlineUsers, connectSocket]);
 
   useEffect(() => {
     if (!socket || !socketConnected || !selectedChat?._id) {
@@ -210,7 +224,15 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const handlePresence = (data: { userId: string; status: string }) => {
-      console.log("🔔 [CHAT] Presence message:", data);
+      if (data.status === "online") {
+        const set = new Set(onlineUsers);
+        set.add(data.userId);
+        setOnlineUsers(Array.from(set));
+      } else {
+        const set = new Set(onlineUsers);
+        set.delete(data.userId);
+        setOnlineUsers(Array.from(set));
+      }
     };
 
     socket.on("new_message", handleNewMessage);
@@ -225,7 +247,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       socket?.off("typing", handleTyping);
       socket?.off("presence", handlePresence);
     };
-  }, [selectedChat?._id, socketConnected]);
+  }, [selectedChat?._id, socketConnected, onlineUsers]);
 
   const sendMessage = useCallback(
     (content: string | Blob, contentType: string) => {
@@ -313,6 +335,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         stopTyping,
         reconnectSocket,
         refetchChats: fetchChats,
+        onlineUsers,
       }}
     >
       {children}

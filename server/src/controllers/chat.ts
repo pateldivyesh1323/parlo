@@ -2,6 +2,7 @@ import Chat from "../model/chat";
 import User from "../model/user";
 import { BadRequestError } from "../middlewares/errorMiddleware";
 import { chatNamespace } from "../sockets";
+import { redisClient } from "../lib/redis";
 
 const createChat = async ({
   userId,
@@ -145,10 +146,29 @@ const notifyContacts = async ({
   }
 };
 
+const getAllOnlineUsers = async (userId: string) => {
+  const chats = await getAllChats(userId, { isGroupChat: false });
+  const contacts = chats
+    .map((chat) => chat.users.filter((user) => user._id.toString() !== userId))
+    .flat();
+
+  const onlineUsers = await Promise.all(
+    contacts.map(async (contact) => {
+      const onlineUser = await redisClient.get(`presence:${contact._id}`);
+      if (onlineUser === "online") {
+        return contact._id;
+      }
+    }),
+  );
+
+  return onlineUsers.filter(Boolean);
+};
+
 export {
   createChat,
   getAllChats,
   getAllChatIds,
   hasUserAccess,
   notifyContacts,
+  getAllOnlineUsers,
 };

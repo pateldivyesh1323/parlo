@@ -1,7 +1,11 @@
 import { Router } from "express";
 import { authMiddleware } from "../middlewares/authMiddleware";
 import { AppResponse, BadRequestError } from "../middlewares/errorMiddleware";
-import { createChat, getAllChats } from "../controllers/chat";
+import {
+  createChat,
+  getAllChats,
+  getAllOnlineUsers,
+} from "../controllers/chat";
 import User from "../model/user";
 
 const router = Router();
@@ -55,6 +59,16 @@ router.get("/get-all", authMiddleware, async (req, res, next) => {
     const userId = req.headers["user-id"];
     const chats = await getAllChats(userId as string);
     AppResponse(res, 200, "Chats fetched successfully", chats);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get("/get-all-online-users", authMiddleware, async (req, res, next) => {
+  try {
+    const userId = req.headers["user-id"];
+    const onlineUsers = await getAllOnlineUsers(userId as string);
+    AppResponse(res, 200, "Online users fetched successfully", onlineUsers);
   } catch (error) {
     next(error);
   }

@@ -17,6 +17,7 @@ const getNormalChatDetails = (
   const isSelected = selectedChat?._id === chat?._id;
 
   return {
+    chatDetails,
     chatTitle,
     chatPhotoURL,
     isSelected,

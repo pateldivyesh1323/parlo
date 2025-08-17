@@ -3,9 +3,9 @@ import Logo from "../Common/Logo";
 export default function NoChatSelectedHolder() {
   return (
     <div className="max-w-4xl mx-auto">
-      <div className="bg-card rounded-lg border border-border p-8 text-center">
+      <div className="bg-card rounded-lg border border-border p-8 text-center my-8">
         <div className="space-y-4">
-          <div className="flex justify-center ">
+          <div className="flex justify-center">
             <Logo showText={false} size="lg" />
           </div>
 

@@ -8,13 +8,21 @@ import {
 } from "../controllers/auth";
 import { authMiddleware } from "../middlewares/authMiddleware";
 import { AppResponse } from "../middlewares/errorMiddleware";
+import { admin } from "../lib/firebaseAdmin";
 
 const router = Router();
 
-router.post("/register", authMiddleware, async (req, res, next) => {
+router.post("/register", async (req, res, next) => {
   try {
-    const firebaseId = req.headers["firebase-id"];
-    const user = await register({ firebaseId: firebaseId as string });
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      AppResponse(res, 401, "Unauthorized: No token");
+      return;
+    }
+
+    const idToken = authHeader.split(" ")[1];
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    const user = await register({ firebaseId: decodedToken.uid });
     AppResponse(res, 201, "User registered successfully", user);
   } catch (error) {
     next(error);
