@@ -18,6 +18,7 @@ export default function MessageInput() {
   const [message, setMessage] = useState<string>("");
   const [activeInput, setActiveInput] = useState<string>("");
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const [isRecording, setIsRecording] = useState<boolean>(false);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -83,6 +84,11 @@ export default function MessageInput() {
 
   const handleRecordingStart = () => {
     setActiveInput(CONTENT_TYPES.AUDIO);
+    setIsRecording(true);
+  };
+
+  const handleRecordingStop = () => {
+    setIsRecording(false);
   };
 
   useEffect(() => {
@@ -113,9 +119,11 @@ export default function MessageInput() {
     setMessage("");
     setAudioBlob(null);
     setActiveInput(CONTENT_TYPES.TEXT);
+    setIsRecording(false);
   }, [selectedChat]);
 
-  const isDisabled = !selectedChat || !socketConnected || !activeInput;
+  const isDisabled =
+    !selectedChat || !socketConnected || !activeInput || isRecording;
 
   return (
     <div className="flex gap-2 p-4 border-t bg-neutral-200">
@@ -156,6 +164,7 @@ export default function MessageInput() {
       {(activeInput === CONTENT_TYPES.AUDIO || activeInput === "") && (
         <MicrophoneInput
           onRecordingStart={handleRecordingStart}
+          onRecordingStop={handleRecordingStop}
           onClear={handleRecordingClear}
           audioBlob={audioBlob}
           setAudioBlob={setAudioBlob}

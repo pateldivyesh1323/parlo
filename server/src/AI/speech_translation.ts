@@ -99,7 +99,21 @@ const speech_to_speech = async ({
     console.log("TTS Lang code:", ttsLangCode);
     const startTime = performance.now();
 
-    const { text: englishText } = await speech_to_text({ audio });
+    let englishText: string;
+    try {
+      const result = await speech_to_text({ audio });
+      englishText = result.text;
+    } catch (error) {
+      console.log("No valid text found in audio, skipping translation");
+      return {
+        originalText: "",
+        translatedText: "",
+        success: false,
+        duration: 0,
+        translatedAudio: null,
+        error: "No valid text found in audio",
+      };
+    }
 
     const translatedText = await translateText(englishText, targetLanguage);
 
@@ -119,7 +133,15 @@ const speech_to_speech = async ({
       translatedAudio,
     };
   } catch (error) {
-    throw error;
+    console.error("Speech to speech translation error:", error);
+    return {
+      originalText: "",
+      translatedText: "",
+      success: false,
+      duration: 0,
+      translatedAudio: null,
+      error: (error as Error).message,
+    };
   }
 };
 

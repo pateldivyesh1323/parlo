@@ -100,28 +100,36 @@ const createMessage = async ({
               userSettings?.translationLanguage &&
               userSettings?.translationLanguage !== "en"
             ) {
-              const { translatedAudio } = await speech_to_speech({
+              const result = await speech_to_speech({
                 audio: content as Buffer,
                 targetLanguage: userSettings?.translationLanguage,
                 ttsLangCode: userSettings?.translationLanguage,
               });
 
-              const audioUrl = await processAndUploadAudio(
-                translatedAudio,
-                `${chatId}-${userId}-${uuid}.wav`,
-              );
+              if (result.success && result.translatedAudio) {
+                const audioUrl = await processAndUploadAudio(
+                  result.translatedAudio,
+                  `${chatId}-${userId}-${uuid}.wav`,
+                );
 
-              const translatedContent = await Content.create({
-                contentType: CONTENT_TYPES.AUDIO,
-                value: audioUrl,
-                uploadedBy: userId,
-              });
+                const translatedContent = await Content.create({
+                  contentType: CONTENT_TYPES.AUDIO,
+                  value: audioUrl,
+                  uploadedBy: userId,
+                });
 
-              return {
-                user: userId,
-                language: userSettings?.translationLanguage,
-                content: translatedContent._id,
-              };
+                return {
+                  user: userId,
+                  language: userSettings?.translationLanguage,
+                  content: translatedContent._id,
+                };
+              } else {
+                console.log(
+                  `Audio translation skipped for user ${userId}: ${
+                    result.error || "No valid text found"
+                  }`,
+                );
+              }
             }
             return null;
           }) || [];
