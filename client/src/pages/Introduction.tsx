@@ -128,7 +128,7 @@ export default function Introduction() {
           </div>
         </div>
 
-        <div className="flex flex-col gap-8 my-24">
+        <div className="flex flex-col gap-8">
           <div className="text-center text-4xl font-bold text-foreground mb-6 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
             How it works
           </div>
