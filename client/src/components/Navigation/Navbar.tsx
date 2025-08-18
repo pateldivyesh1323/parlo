@@ -6,6 +6,7 @@ import LogoutConfirmDialog from "../Auth/LogoutConfirmDialog";
 import LoadingSpinner from "../Common/LoadingSpinner";
 import { Logo } from "../Common";
 import { NavLink } from "react-router";
+import { RainbowButton } from "../magicui/rainbow-button";
 
 export default function Navbar() {
   const { user, loading } = useAuth();
@@ -67,9 +68,9 @@ export default function Navbar() {
             </div>
           ) : (
             <NavLink to="/signin">
-              <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
-                Sign In
-              </Button>
+              <RainbowButton>
+                <span>Sign In</span>
+              </RainbowButton>
             </NavLink>
           )}
         </div>
