@@ -3,7 +3,7 @@ interface Chat {
   name: string;
   isGroupChat: boolean;
   users: User[];
-  admin: User;
+  admin: string;
   latestMessage: Message;
   photoURL: string;
 }
