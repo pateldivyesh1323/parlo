@@ -6,6 +6,7 @@ import { getNormalChatDetails } from "@/helpers/Chat";
 import { CONTENT_TYPES } from "@/constants";
 import { AudioWaveform, Circle } from "lucide-react";
 import { useSearchParams } from "react-router";
+import { getLatestMessageDate } from "@/lib/helpers";
 
 const ChatItem = ({ chat }: { chat: Chat }) => {
   const { user } = useAuth();
@@ -79,11 +80,7 @@ const ChatItem = ({ chat }: { chat: Chat }) => {
             )}
           </div>
           <div className="flex-shrink-0 text-muted-foreground">
-            {latestMessage?.createdAt &&
-              new Date(latestMessage.createdAt).toLocaleString("en-US", {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
+            {latestMessage?.createdAt && getLatestMessageDate(latestMessage)()}
           </div>
         </div>
       </div>
