@@ -26,7 +26,7 @@ const StepCard: React.FC<StepCardProps> = ({
             <div className={`${colorClass} w-8 h-8`}>{icon}</div>
           </div>
           <div
-            className={`absolute -top-2 -right-2 w-8 h-8 ${colorClass} bg-background rounded-full flex items-center justify-center text-sm font-bold border-2 border-background shadow-lg`}
+            className={`absolute -top-2 -right-2 w-8 h-8 ${colorClass} rounded-full flex items-center justify-center text-sm font-bold`}
           >
             {number}
           </div>

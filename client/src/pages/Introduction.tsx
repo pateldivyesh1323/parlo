@@ -91,6 +91,10 @@ export default function Introduction() {
   return (
     <div className="flex-1 bg-gradient-to-br from-background to-muted min-h-screen">
       <div className="container mx-auto px-4 py-16">
+        <div className="flex items-center justify-center gap-2 text-sm">
+          Not backed by{" "}
+          <img src="/assets/logos/yc.svg" alt="" className="h-4" />
+        </div>
         <div className="text-center mb-16">
           <h1 className="text-6xl font-extrabold text-foreground mb-6">
             <AuroraText>Welcome to Parlo</AuroraText>
