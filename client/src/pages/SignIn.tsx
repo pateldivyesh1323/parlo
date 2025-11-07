@@ -20,6 +20,7 @@ export default function SignIn() {
     e.preventDefault();
     setLoading(true);
     try {
+      localStorage.clear();
       if (isLogin) {
         await login(email, password);
         toast.success("Signed in successfully!");
@@ -40,6 +41,7 @@ export default function SignIn() {
   const handleGoogleSignIn = async () => {
     setLoading(true);
     try {
+      localStorage.clear();
       await signInWithGoogle();
       toast.success("Signed in with Google!");
       navigate("/chats");
