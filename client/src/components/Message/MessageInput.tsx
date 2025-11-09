@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useChat } from "@/context/ChatContext";
+import { useAutocomplete } from "@/context/autocompleteContext";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
@@ -15,13 +16,17 @@ export default function MessageInput() {
     stopTyping,
   } = useChat();
 
+  const { getAutocomplete } = useAutocomplete();
+
   const [message, setMessage] = useState<string>("");
   const [activeInput, setActiveInput] = useState<string>("");
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [isRecording, setIsRecording] = useState<boolean>(false);
+  const [prediction, setPrediction] = useState<string>("");
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const autocompleteTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleSend = () => {
     if (!selectedChat || !socketConnected) return;
@@ -31,6 +36,7 @@ export default function MessageInput() {
         if (!message.trim()) return;
         sendMessage(message.trim(), CONTENT_TYPES.TEXT);
         setMessage("");
+        setPrediction("");
         break;
       case CONTENT_TYPES.AUDIO:
         if (!audioBlob) return;
@@ -52,6 +58,10 @@ export default function MessageInput() {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
+    } else if (e.key === "Tab" && prediction) {
+      e.preventDefault();
+      setMessage(message + prediction);
+      setPrediction("");
     }
   };
 
@@ -60,7 +70,7 @@ export default function MessageInput() {
     if (textarea) {
       textarea.style.height = "auto";
       const scrollHeight = textarea.scrollHeight;
-      const maxHeight = 120; // Max height in pixels (about 5-6 lines)
+      const maxHeight = 120;
       textarea.style.height = `${Math.min(scrollHeight, maxHeight)}px`;
       textarea.style.overflowY = scrollHeight > maxHeight ? "auto" : "hidden";
     }
@@ -71,7 +81,9 @@ export default function MessageInput() {
   }, [stopTyping]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setMessage(e.target.value);
+    const newValue = e.target.value;
+    setMessage(newValue);
+    setPrediction("");
     startTyping();
 
     if (typingTimeoutRef.current) {
@@ -80,6 +92,17 @@ export default function MessageInput() {
     typingTimeoutRef.current = setTimeout(() => {
       debouncedStopTyping();
     }, 2000);
+
+    if (autocompleteTimeoutRef.current) {
+      clearTimeout(autocompleteTimeoutRef.current);
+    }
+    if (newValue.trim().length > 0) {
+      autocompleteTimeoutRef.current = setTimeout(() => {
+        getAutocomplete(newValue, (predictedText) => {
+          setPrediction(predictedText);
+        });
+      }, 500);
+    }
   };
 
   const handleRecordingStart = () => {
@@ -112,6 +135,9 @@ export default function MessageInput() {
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current);
       }
+      if (autocompleteTimeoutRef.current) {
+        clearTimeout(autocompleteTimeoutRef.current);
+      }
     };
   }, []);
 
@@ -120,6 +146,7 @@ export default function MessageInput() {
     setAudioBlob(null);
     setActiveInput(CONTENT_TYPES.TEXT);
     setIsRecording(false);
+    setPrediction("");
   }, [selectedChat]);
 
   const isDisabled =
@@ -159,6 +186,22 @@ export default function MessageInput() {
               overflow: "hidden",
             }}
           />
+          {prediction && (
+            <div
+              className="absolute top-0 left-0 right-0 bottom-0 pointer-events-none overflow-hidden"
+              style={{
+                padding: "0.5rem 0.75rem",
+                lineHeight: "1.4",
+                fontFamily: "inherit",
+                fontSize: "inherit",
+              }}
+            >
+              <div className="whitespace-pre-wrap break-words max-h-[120px] overflow-hidden">
+                <span className="invisible">{message}</span>
+                <span className="text-gray-400 opacity-60">{prediction}</span>
+              </div>
+            </div>
+          )}
         </div>
       )}
       {(activeInput === CONTENT_TYPES.AUDIO || activeInput === "") && (

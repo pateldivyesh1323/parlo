@@ -10,6 +10,7 @@ import PublicRouteWrapper from "./components/PageWrappers/PublicRouteWrapper";
 import { AuthProvider } from "./context/AuthContext";
 import { ChatProvider } from "./context/ChatContext";
 import Settings from "./pages/Settings";
+import { AutocompleteProvider } from "./context/autocompleteContext";
 
 const router = createBrowserRouter([
   {
@@ -55,7 +56,9 @@ function App() {
     <>
       <AuthProvider>
         <ChatProvider>
-          <RouterProvider router={router} />
+          <AutocompleteProvider>
+            <RouterProvider router={router} />
+          </AutocompleteProvider>
         </ChatProvider>
       </AuthProvider>
       <Toaster />

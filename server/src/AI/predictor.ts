@@ -6,34 +6,47 @@ const groq = new Groq({
 });
 
 const predictNextText = async (text: string) => {
-  const chatCompletion = await groq.chat.completions.create({
-    messages: [
-      {
-        role: "system",
-        content:
-          "You are a fast, minimal text autocompletion engine. Continue the text naturally without repeating it, without quotes, and without explanations.",
-      },
-      {
-        role: "system",
-        content:
-          "Never repeat the user's input. Start directly from where their text left off.",
-      },
-      {
-        role: "user",
-        content: `${text}`,
-      },
-    ],
-    model: "openai/gpt-oss-20b",
-    temperature: 1,
-    max_completion_tokens: 128,
-    top_p: 1,
-    stream: true,
-    // reasoning_effort: "low",
-    stop: null,
-  });
+  try {
+    const chatCompletion = await groq.chat.completions.create({
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are a fast, minimal text autocompletion engine. Continue the text naturally without repeating it, without quotes, and without explanations.",
+        },
+        {
+          role: "system",
+          content:
+            "Never repeat the user's input. Start directly from where their text left off.",
+        },
+        {
+          role: "system",
+          content:
+            "Keep completions SHORT - maximum 3-5 words. Complete the current thought and stop.",
+        },
+        {
+          role: "user",
+          content: `${text}`,
+        },
+      ],
+      model: "llama-3.1-8b-instant",
+      temperature: 0.15,
+      max_completion_tokens: 15,
+      top_p: 0.9,
+      stream: true,
+      stop: null,
+    });
 
-  for await (const chunk of chatCompletion) {
-    process.stdout.write(chunk.choices[0]?.delta?.content || "");
+    let completedText = "";
+    for await (const chunk of chatCompletion) {
+      const content = chunk.choices[0]?.delta?.content || "";
+      process.stdout.write(content);
+      completedText += content;
+    }
+    return completedText;
+  } catch (error) {
+    console.error("❌ Prediction error:", error);
+    return "";
   }
 };
 

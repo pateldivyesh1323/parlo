@@ -16,7 +16,7 @@ export default function setupChatNamespace(namespace: Namespace) {
     const userId = socket.data.user_id;
 
     // Update the online status (Also handled in the disconnect event)
-    console.log("🔌 [CHAT] Client connected:", firebaseId);
+    console.log("🗨️ [CHAT] Client connected:", userId);
     redisClient.set(`presence:${userId}`, "online", {
       EX: 60 * 60 * 24,
     });
