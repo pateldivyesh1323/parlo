@@ -14,6 +14,7 @@ import type { Socket } from "socket.io-client";
 
 interface AutocompleteContextType {
   getAutocomplete: (
+    chatId: string,
     context: string,
     onPrediction: (text: string) => void,
   ) => void;
@@ -33,12 +34,14 @@ export const AutocompleteProvider = ({ children }: { children: ReactNode }) => {
   const predictionCallbackRef = useRef<((text: string) => void) | null>(null);
 
   const getAutocomplete = (
+    chatId: string,
     context: string,
     onPrediction: (text: string) => void,
   ) => {
     if (!autocompleteSocketConnected) return;
     predictionCallbackRef.current = onPrediction;
-    if (socket.current) socket.current.emit("get_auto_complete", { context });
+    if (socket.current)
+      socket.current.emit("get_auto_complete", { chatId, context });
   };
 
   const value = { getAutocomplete };

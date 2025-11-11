@@ -1,6 +1,9 @@
 import { createClient } from "redis";
+import environments from "../environments";
 
-const redisClient = createClient();
+const redisClient = createClient({
+  url: environments.REDIS_URI,
+});
 const subClient = redisClient.duplicate();
 
 redisClient.on("error", (error) => {

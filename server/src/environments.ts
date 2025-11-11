@@ -16,5 +16,6 @@ export default {
   LOCATION: process.env.GOOGLE_CLOUD_LOCATION,
   PORT: process.env.PORT || 8000,
   ORIGIN: process.env.ORIGIN || "http://localhost:5173",
-  MONGO_URI: process.env.MONGO_URI,
+  MONGO_URI: process.env.MONGO_URI || "mongodb://localhost:27017/parlo",
+  REDIS_URI: process.env.REDIS_URI || "redis://localhost:6379",
 };

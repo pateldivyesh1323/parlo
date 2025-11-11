@@ -7,6 +7,7 @@ import translateText from "../AI/text_translation";
 import { CONTENT_TYPES } from "../constants";
 import { processAndUploadAudio } from "../lib/firebaseAdmin";
 import { speech_to_speech } from "../AI/speech_translation";
+import { appendMessageToContext } from "../AI/predictor";
 
 const createMessage = async ({
   chatId,
@@ -152,8 +153,9 @@ const createMessage = async ({
     latestMessage: newMessage._id,
   });
 
-  await newMessage.populate("sender");
   await newMessage.populate("originalContent");
+  appendMessageToContext({ chatId: chatId, message: newMessage });
+  await newMessage.populate("sender");
   await newMessage.populate("translatedContents.content");
 
   return newMessage.toObject();

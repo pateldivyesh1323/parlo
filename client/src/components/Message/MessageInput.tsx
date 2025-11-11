@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useChat } from "@/context/ChatContext";
-import { useAutocomplete } from "@/context/autocompleteContext";
+import { useAutocomplete } from "@/context/AutocompleteContext";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
@@ -81,6 +81,8 @@ export default function MessageInput() {
   }, [stopTyping]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    if (!selectedChat) return;
+
     const newValue = e.target.value;
     setMessage(newValue);
     setPrediction("");
@@ -96,9 +98,10 @@ export default function MessageInput() {
     if (autocompleteTimeoutRef.current) {
       clearTimeout(autocompleteTimeoutRef.current);
     }
+
     if (newValue.trim().length > 0) {
       autocompleteTimeoutRef.current = setTimeout(() => {
-        getAutocomplete(newValue, (predictedText) => {
+        getAutocomplete(selectedChat._id || "", newValue, (predictedText) => {
           setPrediction(predictedText);
         });
       }, 500);
